@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>寄售台账</title>
+<style>
+:root{
+  --kimi-font-sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Segoe UI",sans-serif;
+  --kimi-color-text-primary:#1b1b1f;
+  --kimi-color-text-secondary:#56565c;
+  --kimi-color-text-tertiary:#8a8a92;
+  --kimi-color-text-quaternary:#b4b4bc;
+  --kimi-color-border:#e5e5ea;
+  --kimi-color-surface:#ffffff;
+  --kimi-color-surface-muted:#f4f4f6;
+  --kimi-color-surface-raised:#ffffff;
+  --kimi-color-warning:#d97706;
+  --kimi-color-danger:#dc2626;
+  --kimi-color-positive:#16a34a;
+  --kimi-chart-1:#4C6FE7;
+  --kimi-chart-2:#E8734C;
+  --kimi-chart-3:#2FA36B;
+  --kimi-chart-4:#7A5AF8;
+  --kimi-chart-5:#C9A227;
+  --t-fast:150ms;
+  --ease-out:cubic-bezier(.2,.8,.4,1);
+}
+body{margin:0;background:#fafafa}
+body>.wrap{max-width:1080px;margin:0 auto;padding:16px;box-sizing:border-box}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<style>
+.wrap{font-family:var(--kimi-font-sans);font-size:16px;line-height:24px;color:var(--kimi-color-text-primary)}
+.wrap button,.wrap input,.wrap select,.wrap textarea{font:inherit;color:inherit}
+.wrap button{cursor:pointer}
+.hd{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.ttl{font-size:20px;font-weight:500}
+.sub{font-size:12px;color:var(--kimi-color-text-tertiary)}
+.hd-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.lsel{padding:7px 10px;border:1px solid var(--kimi-color-border);border-radius:10px;background:var(--kimi-color-surface);font-size:14px;font-weight:500}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--kimi-color-border);margin-bottom:16px;overflow-x:auto}
+.tab{padding:8px 12px;font-size:14px;color:var(--kimi-color-text-secondary);background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tab.on{color:var(--kimi-color-text-primary);border-bottom-color:var(--kimi-color-text-primary);font-weight:500}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:16px}
+.kpi{border:1px solid var(--kimi-color-border);border-radius:12px;padding:12px;background:var(--kimi-color-surface)}
+.kpi .v{font-size:26px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .l{font-size:12px;color:var(--kimi-color-text-tertiary)}
+.kpi.click{cursor:pointer;transition:border-color var(--t-fast) var(--ease-out)}
+.kpi.click:hover{border-color:var(--kimi-chart-1)}
+.kpi.click .l{color:var(--kimi-chart-1)}
+.alertbox{border:1px solid var(--kimi-color-border);border-radius:12px;padding:12px;margin-bottom:16px;background:var(--kimi-color-surface)}
+.alertbox h3{font-size:14px;font-weight:500;margin:0 0 8px;display:flex;align-items:center;gap:6px}
+.arow{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;border-top:1px solid var(--kimi-color-border)}
+.arow:first-of-type{border-top:none}
+.arow .grow{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:2px 8px;border-radius:6px;white-space:nowrap}
+.c-warn{color:var(--kimi-color-warning);background:color-mix(in srgb,var(--kimi-color-warning) 14%,transparent)}
+.c-danger{color:var(--kimi-color-danger);background:color-mix(in srgb,var(--kimi-color-danger) 12%,transparent)}
+.c-pos{color:var(--kimi-color-positive);background:color-mix(in srgb,var(--kimi-color-positive) 12%,transparent)}
+.c-gray{color:var(--kimi-color-text-secondary);background:var(--kimi-color-surface-muted)}
+.c-blue{color:var(--kimi-chart-1);background:color-mix(in srgb,var(--kimi-chart-1) 12%,transparent)}
+.c-purple{color:var(--kimi-chart-4);background:color-mix(in srgb,var(--kimi-chart-4) 12%,transparent)}
+table.tb{width:100%;border-collapse:collapse;font-size:14px}
+.tb th{text-align:left;font-weight:500;color:var(--kimi-color-text-tertiary);font-size:12px;padding:6px 8px;border-bottom:1px solid var(--kimi-color-border)}
+.tb td{padding:8px;border-bottom:1px solid var(--kimi-color-border);vertical-align:middle}
+.tb tr:hover .rowact{opacity:1}
+.rowact{opacity:0;display:inline-flex;gap:4px;transition:opacity var(--t-fast) var(--ease-out)}
+.ibtn{width:28px;height:28px;border-radius:8px;border:1px solid var(--kimi-color-border);background:var(--kimi-color-surface);display:inline-flex;align-items:center;justify-content:center;color:var(--kimi-color-text-secondary)}
+.ibtn:hover{color:var(--kimi-color-text-primary)}
+.thumb{width:36px;height:36px;border-radius:8px;object-fit:cover;flex:none;background:var(--kimi-color-surface-muted);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500}
+.pname{font-weight:500}
+.pcode{font-size:12px;color:var(--kimi-color-text-tertiary)}
+.form{border:1px solid var(--kimi-color-border);border-radius:12px;padding:16px;margin-bottom:16px;background:var(--kimi-color-surface)}
+.form h3{font-size:14px;font-weight:500;margin:0 0 12px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.fld label{display:block;font-size:12px;color:var(--kimi-color-text-tertiary);margin-bottom:4px}
+.fld input,.fld select,.fld textarea{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--kimi-color-border);border-radius:10px;background:var(--kimi-color-surface);font-size:14px}
+.btn{padding:8px 16px;border-radius:10px;border:1px solid color-mix(in srgb,var(--kimi-chart-1) 45%,transparent);background:color-mix(in srgb,var(--kimi-chart-1) 10%,transparent);color:var(--kimi-chart-1);font-size:14px;display:inline-flex;align-items:center;gap:6px;font-weight:500}
+.btn:hover{background:color-mix(in srgb,var(--kimi-chart-1) 18%,transparent)}
+.btn.ghost{background:var(--kimi-color-surface);color:var(--kimi-color-text-primary);border-color:var(--kimi-color-border);font-weight:400}
+.btn.ghost:hover{background:var(--kimi-color-surface-muted)}
+.btn.sm{padding:6px 12px;font-size:13px}
+.btn:disabled{opacity:.4;cursor:default}
+.seg{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px}
+.seg label{position:relative}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:inline-block;padding:6px 12px;border-radius:8px;border:1px solid var(--kimi-color-border);font-size:13px;cursor:pointer;color:var(--kimi-color-text-secondary);background:var(--kimi-color-surface)}
+.seg input:checked+span{border-color:var(--kimi-color-text-primary);color:var(--kimi-color-text-primary);background:var(--kimi-color-surface-muted);font-weight:500}
+.muted{font-size:12px;color:var(--kimi-color-text-quaternary)}
+.empty{padding:32px;text-align:center;color:var(--kimi-color-text-tertiary);font-size:14px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.scard{border:1px solid var(--kimi-color-border);border-radius:12px;padding:14px;cursor:pointer;background:var(--kimi-color-surface)}
+.scard:hover{border-color:var(--kimi-color-text-tertiary)}
+.scard .nm{font-size:15px;font-weight:500;display:flex;align-items:center;gap:8px}
+.scard .mt{font-size:12px;color:var(--kimi-color-text-tertiary);margin-top:4px}
+.scard.stopped{opacity:.6}
+.imgup{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.imgprev{width:72px;height:72px;border-radius:10px;object-fit:cover;border:1px solid var(--kimi-color-border);background:var(--kimi-color-surface-muted);display:flex;align-items:center;justify-content:center;color:var(--kimi-color-text-quaternary)}
+.photogrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.phcard{border:1px solid var(--kimi-color-border);border-radius:10px;padding:6px;position:relative;background:var(--kimi-color-surface)}
+.phcard img{width:100%;height:100px;object-fit:cover;border-radius:7px}
+.phcard .phm{font-size:11px;color:var(--kimi-color-text-tertiary);margin-top:4px;display:flex;justify-content:space-between;align-items:center;gap:4px}
+.num{font-variant-numeric:tabular-nums}
+h2.sec{font-size:15px;font-weight:500;margin:20px 0 8px}
+.note{font-size:12px;color:var(--kimi-color-text-tertiary);background:var(--kimi-color-surface-muted);border-radius:10px;padding:10px 12px;margin-bottom:16px}
+.monthnav{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.monthnav .mlab{font-size:17px;font-weight:500;min-width:110px;text-align:center}
+details{border:1px solid var(--kimi-color-border);border-radius:12px;padding:12px 16px;margin-bottom:12px;background:var(--kimi-color-surface)}
+details summary{cursor:pointer;font-size:14px;font-weight:500;list-style:none;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+details summary::-webkit-details-marker{display:none}
+details[open] summary{margin-bottom:12px}
+.picker{position:relative}
+.pk-drop{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--kimi-color-surface-raised);border:1px solid var(--kimi-color-border);border-radius:10px;z-index:5;max-height:240px;overflow:auto;box-shadow:0 4px 16px color-mix(in srgb,var(--kimi-color-text-primary) 8%,transparent)}
+.pk-item{display:flex;gap:8px;align-items:center;padding:8px 10px;font-size:14px;cursor:pointer}
+.pk-item:hover{background:var(--kimi-color-surface-muted)}
+.rank{display:inline-flex;width:22px;height:22px;border-radius:6px;align-items:center;justify-content:center;font-size:12px;font-weight:500;background:var(--kimi-color-surface-muted);color:var(--kimi-color-text-secondary);flex:none}
+.backrow{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.stepper{display:inline-flex;align-items:center;gap:0;border:1px solid var(--kimi-color-border);border-radius:8px;overflow:hidden}
+.stepper button{width:28px;height:30px;border:none;background:var(--kimi-color-surface);font-size:15px;color:var(--kimi-color-text-secondary);display:flex;align-items:center;justify-content:center}
+.stepper button:hover:not(:disabled){color:var(--kimi-chart-1);background:color-mix(in srgb,var(--kimi-chart-1) 8%,transparent)}
+.stepper .qv{width:44px;border:none;text-align:center;font-variant-numeric:tabular-nums;font-weight:500;font-size:14px;padding:6px 0;outline:none;-moz-appearance:textfield}
+.stepper .qv::-webkit-outer-spin-button,.stepper .qv::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.mapdot{cursor:pointer}
+.mapdot:hover circle.halo{stroke:var(--kimi-color-text-primary)}
+.maplbl{paint-order:stroke;stroke:var(--kimi-color-surface);stroke-width:3px;stroke-linejoin:round}
+.osheet td,.osheet th{padding:6px 8px;font-size:13px;border-bottom:1px solid var(--kimi-color-border)}
+.tscroll{overflow-x:auto}
+.palchip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--kimi-color-border);border-radius:999px;background:var(--kimi-color-surface);font-size:13px;cursor:grab;user-select:none;touch-action:none}
+.palchip:active{cursor:grabbing}
+.dragghost{position:fixed;z-index:1200;pointer-events:none;padding:6px 12px;border-radius:999px;background:var(--kimi-color-surface-raised);border:1px solid var(--kimi-chart-1);font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+#diy-svg{display:block;width:100%;background:var(--kimi-color-surface);border:1px dashed var(--kimi-color-border);border-radius:12px;touch-action:none}
+.mback{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:14px}
+.mbg{position:absolute;inset:0;background:color-mix(in srgb,var(--kimi-color-text-primary) 40%,transparent)}
+.mbox{position:relative;box-sizing:border-box;background:var(--kimi-color-surface-raised);border:1px solid var(--kimi-color-border);border-radius:16px;padding:18px;width:100%;max-width:740px;max-height:94vh;overflow:auto;box-shadow:0 14px 44px rgba(0,0,0,.22)}
+</style>
+<script>
+(function(){
+var KEY='consign_v1';
+var CATS=['项链','耳饰','手链','戒指','其他'];
+var CATCLR={'项链':'c-blue','耳饰':'c-purple','手链':'c-pos','戒指':'c-danger','其他':'c-gray'};
+var ST={paid:['已回款','c-pos'],invoiced:['已开发票未回款','c-warn'],unpaid:['未回款','c-danger']};
+var SHAPES={circle:'圆珠',ring:'开口环',clasp:'龙虾扣',chain:'链条',stud:'耳钉',custom:'自定义图'};
+var PALETTE=['#4C6FE7','#7A5AF8','#E8734C','#2FA36B','#C9A227','#D9534F'];
+var CITY={'北京':[116.4,39.9],'上海':[121.47,31.23],'广州':[113.26,23.13],'深圳':[114.06,22.55],'杭州':[120.15,30.27],'南京':[118.78,32.07],'苏州':[120.58,31.3],'无锡':[120.3,31.57],'宁波':[121.55,29.88],'温州':[120.65,28.01],'泉州':[118.68,24.93],'厦门':[118.09,24.48],'福州':[119.3,26.08],'武汉':[114.3,30.6],'长沙':[112.94,28.23],'南昌':[115.89,28.68],'合肥':[117.28,31.86],'郑州':[113.63,34.75],'成都':[104.07,30.57],'重庆':[106.55,29.56],'西安':[108.94,34.34],'昆明':[102.83,24.88],'贵阳':[106.63,26.65],'南宁':[108.37,22.82],'桂林':[110.29,25.27],'太原':[112.55,37.87],'石家庄':[114.51,38.04],'天津':[117.2,39.13],'青岛':[120.38,36.07],'济南':[117.0,36.65],'烟台':[121.45,37.46],'大连':[121.6,38.91],'沈阳':[123.43,41.8],'长春':[125.32,43.82],'哈尔滨':[126.53,45.8],'兰州':[103.83,36.06],'西宁':[101.78,36.62],'银川':[106.23,38.49],'乌鲁木齐':[87.62,43.82],'拉萨':[91.14,29.65],'海口':[110.2,20.04],'三亚':[109.5,18.25],'佛山':[113.12,23.02],'东莞':[113.75,23.04],'珠海':[113.58,22.27],'香港':[114.17,22.3],'澳门':[113.55,22.19],'台北':[121.56,25.03],'东京':[139.69,35.68],'首尔':[126.98,37.57],'新加坡':[103.82,1.35],'曼谷':[100.5,13.76],'吉隆坡':[101.69,3.14],'伦敦':[-0.13,51.5],'巴黎':[2.35,48.86],'柏林':[13.4,52.52],'米兰':[9.19,45.46],'马德里':[-3.7,40.42],'阿姆斯特丹':[4.9,52.37],'纽约':[-74.01,40.71],'洛杉矶':[-118.24,34.05],'旧金山':[-122.42,37.77],'温哥华':[-123.12,49.28],'多伦多':[-79.38,43.65],'悉尼':[151.2,-33.87],'墨尔本':[144.96,-37.81],'迪拜':[55.27,25.2]};
+var WORLD=[
+[[-168,66],[-155,58],[-152,58],[-145,60],[-135,58],[-130,55],[-125,49],[-124,44],[-122,38],[-117,33],[-114,28],[-110,23],[-105,20],[-97,16],[-94,18],[-90,20],[-86,21],[-83,25],[-80,28],[-81,31],[-79,33],[-76,36],[-74,40],[-70,42],[-66,45],[-60,46],[-65,45],[-70,42],[-75,38],[-80,32],[-82,28],[-90,20]],
+[[-80,9],[-75,11],[-68,12],[-62,10],[-55,6],[-50,0],[-44,-3],[-38,-6],[-35,-9],[-38,-15],[-40,-22],[-48,-28],[-52,-33],[-57,-38],[-62,-41],[-65,-45],[-67,-50],[-70,-54],[-74,-50],[-72,-44],[-70,-37],[-70,-30],[-70,-20],[-76,-14],[-80,-6],[-81,-1],[-80,4],[-80,9]],
+[[-45,60],[-40,65],[-32,68],[-22,70],[-20,74],[-28,78],[-40,77],[-52,74],[-55,70],[-52,64],[-45,60]],
+[[-10,36],[-9,43],[-4,48],[-2,50],[1,51],[5,53],[8,55],[10,58],[18,56],[21,55],[24,59],[28,60],[30,62],[28,65],[32,70],[38,68],[44,68],[50,69],[58,69],[66,69],[72,73],[80,75],[90,75],[100,77],[110,74],[120,73],[130,72],[140,72],[150,70],[160,70],[170,66],[178,65],[178,62],[170,60],[162,58],[157,53],[151,50],[142,46],[137,42],[135,35],[129,33],[126,37],[121,38],[119,35],[121,30],[122,25],[118,22],[112,20],[108,15],[105,10],[103,6],[100,8],[98,12],[94,17],[90,22],[86,20],[82,15],[80,10],[77,8],[72,20],[66,25],[60,25],[55,26],[50,29],[48,30],[44,28],[38,27],[33,28],[28,29],[24,32],[20,33],[15,34],[12,36],[10,37],[5,37],[0,38],[-2,37],[-6,36],[-10,36]],
+[[-17,15],[-10,5],[-5,5],[0,6],[5,4],[8,4],[9,0],[9,-5],[12,-8],[13,-12],[12,-17],[14,-22],[16,-28],[19,-34],[25,-34],[28,-32],[31,-29],[33,-26],[35,-22],[36,-18],[40,-15],[40,-10],[42,-4],[46,-1],[51,2],[51,10],[46,11],[43,12],[40,15],[38,18],[37,22],[34,27],[35,31],[32,31],[27,32],[22,33],[17,33],[12,34],[11,32],[9,32],[9,28],[5,24],[0,20],[-6,17],[-12,16],[-17,15]],
+[[44,-12],[47,-15],[50,-16],[49,-20],[47,-24],[45,-25],[43,-22],[43,-17],[44,-12]],
+[[-5,50],[-3,53],[-5,56],[-3,58],[-1,57],[0,53],[1,51],[-5,50]],
+[[130,31],[132,33],[135,34],[137,35],[140,36],[141,39],[141,42],[143,43],[145,44],[143,41],[140,38],[137,35],[133,33],[130,31]],
+[[120,18],[122,16],[121,14],[124,11],[122,7],[120,6],[119,10],[118,14],[120,18]],
+[[95,5],[98,3],[102,0],[106,-3],[104,-5],[100,-2],[96,2],[95,5]],
+[[109,1],[113,4],[117,6],[119,2],[116,-2],[112,-3],[109,-1],[109,1]],
+[[106,-6],[110,-7],[114,-8],[118,-9],[122,-9],[126,-10],[130,-8],[136,-6],[141,-4],[146,-6],[150,-9],[147,-9],[141,-8],[135,-9],[130,-9],[124,-10],[118,-10],[112,-9],[107,-7],[106,-6]],
+[[114,-22],[114,-28],[116,-33],[119,-35],[124,-33],[129,-32],[132,-32],[135,-35],[138,-36],[140,-38],[145,-38],[147,-40],[150,-37],[153,-32],[153,-27],[151,-24],[146,-19],[142,-15],[142,-11],[137,-12],[135,-15],[132,-12],[130,-13],[126,-14],[122,-17],[118,-20],[114,-22]],
+[[145,-41],[148,-41],[147,-43],[145,-43],[145,-41]],
+[[167,-45],[170,-43],[173,-40],[176,-38],[174,-42],[171,-46],[167,-47],[167,-45]]
+];
+var ICON={
+plus:'<path d="M12 6.09961C12.4971 6.09961 12.9004 6.50294 12.9004 7V11.0996H17C17.4971 11.0996 17.9004 11.5029 17.9004 12C17.9004 12.4971 17.4971 12.9004 17 12.9004H12.9004V17C12.9004 17.4971 12.4971 17.9004 12 17.9004C11.5029 17.9004 11.0996 17.4971 11.0996 17V12.9004H7C6.50294 12.9004 6.09961 12.4971 6.09961 12C6.09961 11.5029 6.50294 11.0996 7 11.0996H11.0996V7C11.0996 6.50294 11.5029 6.09961 12 6.09961Z"/>',
+minus:'<path d="M6.09961 12C6.09961 11.5029 6.50294 11.0996 7 11.0996H17C17.4971 11.0996 17.9004 11.5029 17.9004 12C17.9004 12.4971 17.4971 12.9004 17 12.9004H7C6.50294 12.9004 6.09961 12.4971 6.09961 12Z"/>',
+del:'<path fill-rule="evenodd" clip-rule="evenodd" d="M8.10001 3C8.10001 2.50294 8.50295 2.1 9.00001 2.1H15C15.4971 2.1 15.9 2.50294 15.9 3C15.9 3.49706 15.4971 3.9 15 3.9H9.00001C8.50295 3.9 8.10001 3.49706 8.10001 3ZM2.10001 6C2.10001 5.50294 2.50295 5.1 3.00001 5.1H21C21.4971 5.1 21.9 5.50294 21.9 6C21.9 6.49706 21.4971 6.9 21 6.9H19.8281L18.8448 18.6993C18.7412 19.9432 17.7013 20.9 16.4531 20.9H7.54686C6.29865 20.9 5.25881 19.9432 5.15515 18.6993L4.17188 6.9H3.00001C2.50295 6.9 2.10001 6.49706 2.10001 6ZM5.97811 6.9L18.0219 6.9L17.0511 18.5498C17.0251 18.8608 16.7652 19.1 16.4531 19.1H7.54686C7.23481 19.1 6.97485 18.8608 6.94893 18.5498L5.97811 6.9ZM10.9 15L10.9 10C10.9 9.50294 10.4971 9.1 10 9.1C9.50295 9.1 9.10001 9.50294 9.10001 10L9.10001 15C9.10001 15.4971 9.50295 15.9 10 15.9C10.4971 15.9 10.9 15.4971 10.9 15ZM14 15.9C14.4971 15.9 14.9 15.4971 14.9 15L14.9 10C14.9 9.50294 14.4971 9.1 14 9.1C13.5029 9.1 13.1 9.50294 13.1 10V15C13.1 15.4971 13.5029 15.9 14 15.9Z"/>',
+edit:'<path d="M18.0179 3.09998C18.3963 3.10003 18.7709 3.17491 19.1205 3.31971C19.4701 3.46454 19.7884 3.67614 20.056 3.94373C20.3237 4.21144 20.5362 4.52965 20.681 4.87928C20.8258 5.22887 20.8997 5.60423 20.8997 5.9828C20.8997 6.36118 20.8257 6.73591 20.681 7.08533C20.5362 7.43497 20.3237 7.75317 20.056 8.02088L17.639 10.4379L9.15756 18.9183C8.5296 19.5463 7.74274 19.992 6.8812 20.2074L4.21811 20.8734C3.91148 20.95 3.5871 20.8596 3.36362 20.6361C3.14017 20.4126 3.05063 20.0883 3.12729 19.7816L3.79233 17.1185C4.00771 16.257 4.45344 15.4701 5.08139 14.8422L15.9798 3.94373C16.5203 3.40346 17.2536 3.09998 18.0179 3.09998ZM19.0003 19.1C19.4972 19.1002 19.8997 19.5034 19.8997 20.0004C19.8995 20.4971 19.4971 20.8996 19.0003 20.8998H12.0003C11.5034 20.8998 11.1001 20.4973 11.0999 20.0004C11.0999 19.5033 11.5033 19.1 12.0003 19.1H19.0003Z"/>',
+bell:'<path d="M21.06 17.32C21.28 17.59 21.325 17.961 21.175 18.275C21.1003 18.4291 20.9836 18.559 20.8384 18.6497C20.6931 18.7405 20.5253 18.7884 20.354 18.788H15.822C15.6401 19.6667 15.1608 20.4558 14.465 21.0223C13.7692 21.5888 12.8993 21.8982 12.002 21.8982C11.1047 21.8982 10.2348 21.5888 9.53899 21.0223C8.84316 20.4558 8.3639 19.6667 8.182 18.788H3.784C3.63174 18.8138 3.47539 18.8001 3.33 18.748C3.15387 18.6867 3.00114 18.5721 2.89294 18.4202C2.78473 18.2683 2.7264 18.0865 2.726 17.9V17.888C2.7264 17.7648 2.75208 17.6431 2.80145 17.5302C2.85082 17.4174 2.92282 17.3159 3.013 17.232L3.259 16.934L3.26 16.932C4.163 15.828 4.683 14.372 4.683 12.852V9.674C4.723 7.645 5.457 5.729 6.76 4.287C8.071 2.826 9.841 2 11.732 2H12.27C16.27 2 19.33 5.643 19.33 9.861V13.044C19.377 14.498 19.886 15.875 20.743 16.935L20.745 16.937L21.06 17.32ZM8.12 5.483L8.117 5.486C7.124 6.584 6.537 8.077 6.502 9.7V12.85C6.502 14.317 6.12 15.75 5.414 16.987H18.594C17.9177 15.7851 17.5462 14.4357 17.512 13.057V9.86C17.512 6.403 15.046 3.799 12.27 3.799H11.732C10.396 3.799 9.109 4.378 8.12 5.483Z"/>',
+dl:'<path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.90002C12.4971 2.90002 12.9 3.30297 12.9 3.80002V12.2939L15.8081 9.38585C16.1595 9.03438 16.7294 9.03438 17.0808 9.38585C17.4323 9.73732 17.4323 10.3072 17.0808 10.6586L12.6364 15.1031C12.4676 15.2719 12.2387 15.3667 12 15.3667C11.7613 15.3667 11.5324 15.2719 11.3636 15.1031L6.91917 10.6586C6.5677 10.3072 6.5677 9.73732 6.91917 9.38585C7.27064 9.03438 7.84049 9.03438 8.19196 9.38585L11.1 12.2939V3.80002C11.1 3.30297 11.503 2.90002 12 2.90002ZM4.00001 13.5874C4.49706 13.5874 4.90001 13.9903 4.90001 14.4874V18.043C4.90001 18.2758 4.99249 18.499 5.1571 18.6636C5.32172 18.8282 5.54498 18.9207 5.77778 18.9207H18.2222C18.455 18.9207 18.6783 18.8283 18.8429 18.6636C19.0075 18.499 19.1 18.2758 19.1 18.043V14.4874C19.1 13.9903 19.5029 13.5874 20 13.5874C20.4971 13.5874 20.9 13.9903 20.9 14.4874V18.043C20.9 18.7531 20.6179 19.4342 20.1157 19.9364C19.6135 20.4386 18.9324 20.7207 18.2222 20.7207H5.77778C5.06759 20.7207 4.38649 20.4386 3.88431 19.9364C3.38213 19.4342 3.10001 18.7531 3.10001 18.043V14.4874C3.10001 13.9903 3.50295 13.5874 4.00001 13.5874Z"/>',
+ul:'<path fill-rule="evenodd" clip-rule="evenodd" d="M11.3636 3.36358C11.7151 3.01211 12.2849 3.01211 12.6364 3.36358L17.0808 7.80802C17.4323 8.1595 17.4323 8.72934 17.0808 9.08082C16.7293 9.43229 16.1595 9.43229 15.808 9.08082L12.9 6.17277V14.6666C12.9 15.1637 12.497 15.5666 12 15.5666C11.5029 15.5666 11.1 15.1637 11.1 14.6666V6.17277L8.19193 9.08082C7.84046 9.43229 7.27061 9.43229 6.91914 9.08082C6.56766 8.72934 6.56766 8.1595 6.91914 7.80802L11.3636 3.36358ZM3.99998 13.7666C4.49703 13.7666 4.89998 14.1696 4.89998 14.6666V18.2222C4.89998 18.455 4.99246 18.6783 5.15707 18.8429C5.32169 19.0075 5.54495 19.1 5.77775 19.1H18.2222C18.455 19.1 18.6783 19.0075 18.8429 18.8429C19.0075 18.6783 19.1 18.455 19.1 18.2222V14.6666C19.1 14.1696 19.5029 13.7666 20 13.7666C20.497 13.7666 20.9 14.1696 20.9 14.6666V18.2222C20.9 18.9324 20.6179 19.6135 20.1157 20.1157C19.6135 20.6179 18.9324 20.9 18.2222 20.9H5.77775C5.06756 20.9 4.38646 20.6179 3.88428 20.1157C3.3821 19.6135 3.09998 18.9324 3.09998 18.2222V14.6666C3.09998 14.1696 3.50292 13.7666 3.99998 13.7666Z"/>',
+img:'<path fill-rule="evenodd" clip-rule="evenodd" d="M17.8998 4.09961C20.0537 4.09961 21.8002 5.84609 21.8002 8V16C21.8002 18.1539 20.0537 19.9004 17.8998 19.9004H5.89978C3.74598 19.9003 1.99939 18.1538 1.99939 16V8C1.99939 5.84617 3.74598 4.09974 5.89978 4.09961H17.8998ZM15.4867 12.2539C15.448 12.2184 15.3885 12.2192 15.351 12.2559L11.7338 15.8027C11.0146 16.5079 9.87305 16.5222 9.13708 15.835L6.98669 13.8262C6.95049 13.7924 6.89516 13.791 6.85681 13.8223L3.82361 16.2988C3.96873 17.3168 4.84165 18.0995 5.89978 18.0996H17.8998C18.9375 18.0996 19.7964 17.3466 19.9662 16.3574L15.4867 12.2539ZM5.89978 5.90039C4.74009 5.90052 3.80017 6.84028 3.80017 8V14.002L5.73181 12.4238C6.46046 11.8286 7.51253 11.8634 8.20056 12.5059L10.351 14.5146C10.3897 14.5508 10.4498 14.5497 10.4877 14.5127L14.1049 10.9658C14.819 10.2656 15.9506 10.2466 16.6879 10.9219L19.9994 13.9551V8C19.9994 6.8402 19.0596 5.90039 17.8998 5.90039H5.89978Z"/>',
+left:'<path d="M14.9141 5.37868C15.2892 5.75375 15.2892 6.35611 14.9141 6.73118L9.62132 12.0239L14.9141 17.3167C15.2892 17.6918 15.2892 18.2941 14.9141 18.6692C14.539 19.0443 13.9367 19.0443 13.5616 18.6692L7.58579 12.6933C7.21072 12.3183 7.21072 11.7159 7.58579 11.3409L13.5616 5.365C13.9367 4.98994 14.539 4.98994 14.9141 5.37868Z"/>',
+right:'<path d="M9.08589 5.37868C8.71082 5.75375 8.71082 6.35611 9.08589 6.73118L14.3787 12.0239L9.08589 17.3167C8.71082 17.6918 8.71082 18.2941 9.08589 18.6692C9.46103 19.0443 10.0634 19.0443 10.4384 18.6692L16.4142 12.6933C16.7893 12.3183 16.7893 11.7159 16.4142 11.3409L10.4384 5.365C10.0634 4.98994 9.46103 4.98994 9.08589 5.37868Z"/>',
+pin:'<path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.09961C15.866 2.09961 19 5.23361 19 9.09961C19 12.3196 16.765 15.2596 13.22 17.5296L12.51 21.4196C12.44 21.8196 12.2 22.0996 11.99 22.0996C11.78 22.0996 11.54 21.8196 11.47 21.4196L10.76 17.5296C7.235 15.2596 5 12.3196 5 9.09961C5 5.23361 8.134 2.09961 12 2.09961ZM12 6.59961C10.62 6.59961 9.5 7.71961 9.5 9.09961C9.5 10.4796 10.62 11.5996 12 11.5996C13.38 11.5996 14.5 10.4796 14.5 9.09961C14.5 7.71961 13.38 6.59961 12 6.59961Z"/>'
+};
+function ic(n,s){s=s||16;return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="currentColor" style="flex:none">'+ICON[n]+'</svg>'}
+function uid(){return Math.random().toString(36).slice(2,9)}
+function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function fmt(n){return (Math.round(n*100)/100).toString().replace(/\B(?=(\d{3})+(?!\d))/g,',')}
+function daysBetween(a,b){return Math.floor((new Date(b)-new Date(a))/864e5)}
+function shiftMonth(m,delta){var y=+m.slice(0,4),mo=+m.slice(5,7)-1+delta;y+=Math.floor(mo/12);mo=((mo%12)+12)%12;return y+'-'+String(mo+1).padStart(2,'0')}
+function monthLabel(m){return m.slice(0,4)+' 年 '+(+m.slice(5,7))+' 月'}
+function mShort(m,multi){return multi?(m.slice(2)):(+m.slice(5,7))+'月'}
+function isStopped(st){return st.status==='stopped'}
+
+function seed(){
+  var comps=[{id:'c1',name:'开口环',unit:'个',cost:0.08,shape:'ring',img:''},
+             {id:'c2',name:'龙虾扣',unit:'个',cost:0.6,shape:'clasp',img:''},
+             {id:'c3',name:'延长链',unit:'cm',cost:0.06,shape:'chain',img:''},
+             {id:'c4',name:'基础元素',unit:'个',cost:0.5,shape:'circle',img:''},
+             {id:'c5',name:'耳钉配件',unit:'对',cost:0.4,shape:'stud',img:''}];
+  var p=[['N-001','月光石项链','项链',280],['N-012','珍珠锁骨链','项链',332],['E-007','星星耳钉','耳饰',148],['E-021','流苏耳环','耳饰',215],['B-003','玛瑙手串','手链',248],['R-015','素圈戒指','戒指',165]]
+   .map(function(a,i){return{id:'p'+(i+1),code:a[0],name:a[1],cat:a[2],img:'',price:a[3],line:'l1',diy:[],time:{base:0,asm:0}}});
+  p[0].diy=[{cid:'c2',x:50,y:150},{cid:'c1',x:80,y:150},{cid:'c1',x:110,y:150},{cid:'c4',x:170,y:150},{cid:'c4',x:220,y:150},{cid:'c4',x:270,y:150},{cid:'c4',x:320,y:150},{cid:'c4',x:370,y:150},{cid:'c4',x:420,y:150},{cid:'c3',x:480,y:150},{cid:'c3',x:500,y:150},{cid:'c3',x:520,y:150}];
+  p[0].time={base:20,asm:15};
+  p[2].diy=[{cid:'c5',x:240,y:90},{cid:'c1',x:240,y:140},{cid:'c4',x:240,y:190},{cid:'c5',x:380,y:90},{cid:'c1',x:380,y:140},{cid:'c4',x:380,y:190}];
+  p[2].time={base:8,asm:6};
+  p[4].diy=[{cid:'c2',x:60,y:150},{cid:'c1',x:90,y:150},{cid:'c4',x:150,y:150},{cid:'c4',x:200,y:150},{cid:'c4',x:250,y:150},{cid:'c4',x:300,y:150},{cid:'c1',x:360,y:150},{cid:'c3',x:420,y:150},{cid:'c3',x:440,y:150}];
+  p[4].time={base:15,asm:10};
+  var s=[{id:'s1',name:'A店（示例）',contact:'王店长 138-0000-0000',mail:'上海市徐汇区安福路 12 号 王店长 收',ratio:0.6,city:'上海',intro:'安福路街边店，主卖项链',status:'active',line:'l1'},
+         {id:'s2',name:'B店（示例）',contact:'李老板 139-0000-0000',mail:'成都市武侯区玉林西路 8 号 李老板 收',ratio:0.55,city:'成都',intro:'玉林路集合店，全品类',status:'active',line:'l1'}];
+  function ago(n){var d=new Date();d.setDate(d.getDate()-n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+  function mo(n){return ago(n).slice(0,7)}
+  var sh=[['s1','p1',5,45],['s1','p2',4,45],['s1','p3',6,45],['s1','p4',4,45],['s1','p5',4,45],['s1','p6',6,45],['s1','p3',4,20],['s2','p1',4,30],['s2','p2',4,30],['s2','p5',6,30]]
+   .map(function(a){return{id:uid(),storeId:a[0],productId:a[1],qty:a[2],date:ago(a[3]),note:''}});
+  var sa=[['s1','p1',4,18],['s1','p2',3,18],['s1','p3',5,5],['s1','p4',2,5],['s2','p1',4,25],['s2','p5',3,40]]
+   .map(function(a){return{id:uid(),storeId:a[0],productId:a[1],qty:a[2],date:ago(a[3]),note:''}});
+  var pa=[{id:uid(),storeId:'s1',month:mo(18),amount:1269,status:'paid',date:ago(18),note:''},
+          {id:uid(),storeId:'s1',month:mo(5),amount:703,status:'invoiced',date:ago(5),note:''},
+          {id:uid(),storeId:'s2',month:mo(25),amount:672,status:'paid',date:ago(25),note:''},
+          {id:uid(),storeId:'s2',month:mo(40),amount:447,status:'unpaid',date:ago(40),note:''}];
+  return{lines:[{id:'l1',name:'饰品'}],comps:comps,photos:[],products:p,stores:s,shipments:sh,sales:sa,payments:pa,settings:{lowStock:2,alertDays:30,wagePerHour:30}};
+}
+var S;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!S||!S.products){S=seed()}
+if(!S.settings)S.settings={lowStock:2,alertDays:30,wagePerHour:30};
+if(S.settings.wagePerHour==null)S.settings.wagePerHour=30;
+if(!S.lines||!S.lines.length)S.lines=[{id:'l1',name:'饰品'}];
+if(!S.comps||!S.comps.length)S.comps=[{id:'c1',name:'开口环',unit:'个',cost:0.08,shape:'ring',img:''},{id:'c2',name:'龙虾扣',unit:'个',cost:0.6,shape:'clasp',img:''},{id:'c3',name:'延长链',unit:'cm',cost:0.06,shape:'chain',img:''},{id:'c4',name:'基础元素',unit:'个',cost:0.5,shape:'circle',img:''},{id:'c5',name:'耳钉配件',unit:'对',cost:0.4,shape:'stud',img:''}];
+if(!S.photos)S.photos=[];
+if(S.settlements&&!S.sales){
+  S.sales=[];S.payments=S.payments||[];
+  var agg={};
+  S.settlements.forEach(function(r){
+    S.sales.push({id:uid(),storeId:r.storeId,productId:r.productId,qty:+r.soldQty||0,date:r.date,note:''});
+    var k=r.storeId+'|'+(r.date||'').slice(0,7);
+    if(!agg[k])agg[k]={storeId:r.storeId,month:(r.date||'').slice(0,7),amount:0,status:r.status||'unpaid',date:r.date};
+    agg[k].amount+=+r.amount||0;
+    if(r.date>=agg[k].date){agg[k].date=r.date;agg[k].status=r.status}
+  });
+  for(var k in agg)S.payments.push({id:uid(),storeId:agg[k].storeId,month:agg[k].month,amount:agg[k].amount,status:agg[k].status,date:agg[k].date,note:''});
+  delete S.settlements;
+}
+S.stores.forEach(function(st){if(st.ratio==null||isNaN(+st.ratio))st.ratio=0.6;if(st.city==null)st.city='';if(st.intro==null)st.intro='';if(st.status==null)st.status='active';if(st.line==null)st.line='l1';if(st.mail==null)st.mail=''});
+S.products.forEach(function(p){
+  if(p.line==null)p.line='l1';
+  if(p.time==null)p.time={base:0,asm:0};
+  if(p.diy==null){
+    p.diy=[];
+    if(p.recipe&&p.recipe.length){
+      var col=0;
+      p.recipe.forEach(function(it){
+        var n=Math.min(24,Math.max(1,Math.round(+it.qty||1)));
+        for(var k=0;k<n;k++){p.diy.push({cid:it.cid,x:60+(col%9)*56,y:80+Math.floor(col/9)*56});col++}
+      });
+    }
+    delete p.recipe;
+  }
+});
+save();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){alert('保存失败：图片可能过大，请压缩后再上传')}}
+function prod(id){for(var i=0;i<S.products.length;i++)if(S.products[i].id===id)return S.products[i];return null}
+function store(id){for(var i=0;i<S.stores.length;i++)if(S.stores[i].id===id)return S.stores[i];return null}
+function lineOf(id){for(var i=0;i<S.lines.length;i++)if(S.lines[i].id===id)return S.lines[i];return null}
+function compOf(id){for(var i=0;i<S.comps.length;i++)if(S.comps[i].id===id)return S.comps[i];return null}
+function lineStores(lid){return S.stores.filter(function(st){return (st.line||'l1')===lid})}
+function lineProds(lid){return S.products.filter(function(p){return (p.line||'l1')===lid})}
+function compColor(c){var i=S.comps.indexOf(c);return PALETTE[(i<0?0:i)%PALETTE.length]}
+function diyCost(diy){var t=0,tally={};(diy||[]).forEach(function(it){tally[it.cid]=(tally[it.cid]||0)+1});for(var cid in tally){var c=compOf(cid);if(c)t+=tally[cid]*(c.shape==='chain'?0.5:1)*(+c.cost||0)}return Math.round(t*100)/100}
+function laborCost(p){var t=p.time||{base:0,asm:0};return Math.round(((+t.base||0)+(+t.asm||0))/60*(S.settings.wagePerHour||30)*100)/100}
+function compUsed(cid){var n=0;S.products.forEach(function(p){(p.diy||[]).forEach(function(it){if(it.cid===cid)n++})});return n}
+function stIdx(id){var st=store(id);if(!st)return -1;var lst=lineStores(st.line||'l1');return lst.indexOf(st)}
+function stNo(id){var i=stIdx(id);return i<0?'':(i+1)}
+function settlePrice(p,st){return Math.round((+p.price||0)*(st?+st.ratio:0)*100)/100}
+function shipped(storeId,pid){var n=0;S.shipments.forEach(function(r){if(r.storeId===storeId&&r.productId===pid)n+=+r.qty});return n}
+function sold(storeId,pid){var n=0;S.sales.forEach(function(r){if(r.storeId===storeId&&r.productId===pid)n+=+r.qty});return n}
+function soldAll(pid){var n=0;S.sales.forEach(function(r){if(r.productId===pid)n+=+r.qty});return n}
+function soldMonth(storeId,pid,m){var n=0;S.sales.forEach(function(r){if(r.storeId===storeId&&r.productId===pid&&r.date.slice(0,7)===m)n+=+r.qty});return n}
+function shippedMonth(storeId,pid,m){var n=0;S.shipments.forEach(function(r){if(r.storeId===storeId&&r.productId===pid&&r.date.slice(0,7)===m)n+=+r.qty});return n}
+function owing(sid){var n=0;S.payments.forEach(function(r){if(r.status!=='paid'&&(!sid||r.storeId===sid))n+=+r.amount});return n}
+function paidTotal(){var n=0;S.payments.forEach(function(r){if(r.status==='paid')n+=+r.amount});return n}
+function lastPayDate(sid){
+  var d=null;
+  S.payments.forEach(function(r){if(r.storeId===sid&&(!d||r.date>d))d=r.date});
+  if(!d)[].concat(S.shipments,S.sales).forEach(function(r){if(r.storeId===sid&&(!d||r.date>d))d=r.date});
+  return d;
+}
+function storeRows(sid){
+  var map={},order=[];
+  S.shipments.forEach(function(r){if(r.storeId===sid&&!map[r.productId]){map[r.productId]=1;order.push(r.productId)}});
+  return order.map(function(pid){var sh=shipped(sid,pid),so=sold(sid,pid);return{pid:pid,shipped:sh,sold:so,left:sh-so}});
+}
+function storeMonths(sid){
+  var m={};
+  function add(d){if(d)m[d.slice(0,7)]=1}
+  S.shipments.forEach(function(r){if(r.storeId===sid)add(r.date)});
+  S.sales.forEach(function(r){if(r.storeId===sid)add(r.date)});
+  S.payments.forEach(function(r){if(r.storeId===sid&&r.month)m[r.month]=1});
+  return Object.keys(m).sort().reverse();
+}
+function paymentOf(sid,m){for(var i=0;i<S.payments.length;i++){var r=S.payments[i];if(r.storeId===sid&&r.month===m)return r}return null}
+function allAlerts(lid){
+  var low=[],over=[];
+  lineStores(lid).forEach(function(st){
+    if(isStopped(st))return;
+    storeRows(st.id).forEach(function(r){
+      if(r.shipped>0&&r.left<=S.settings.lowStock)low.push({sid:st.id,store:st.name,pid:r.pid,left:r.left});
+    });
+    var d=lastPayDate(st.id);
+    if(d){var gap=daysBetween(d,today());if(gap>S.settings.alertDays)over.push({sid:st.id,store:st.name,date:d,gap:gap})}
+  });
+  return{low:low,over:over};
+}
+function thumb(p,sz){
+  sz=sz||36;
+  if(p&&p.img)return '<img class="thumb" style="width:'+sz+'px;height:'+sz+'px" src="'+p.img+'">';
+  var ch=p?(p.cat==='项链'?'项':p.cat==='耳饰'?'耳':p.cat==='手链'?'手':p.cat==='戒指'?'戒':'饰'):'?';
+  return '<span class="thumb '+(CATCLR[p?p.cat:'其他']||'c-gray')+'" style="width:'+sz+'px;height:'+sz+'px">'+ch+'</span>';
+}
+function chip(t,cls){return '<span class="chip '+cls+'">'+t+'</span>'}
+function node0(c,color){
+  if(c.img)return '<image href="'+c.img+'" x="-10" y="-10" width="20" height="20"/>';
+  if(c.shape==='ring')return '<circle r="6" fill="none" stroke="'+color+'" stroke-width="2.5"/>';
+  if(c.shape==='clasp')return '<rect x="-9" y="-4" width="18" height="8" rx="4" fill="'+color+'"/>';
+  if(c.shape==='chain')return '<path d="M-9,0 L9,0" stroke="'+color+'" stroke-width="2" stroke-dasharray="3,2.5"/>';
+  if(c.shape==='stud')return '<circle cy="2" r="5.5" fill="'+color+'"/><path d="M-5,-7 L5,-7" stroke="'+color+'" stroke-width="2.5"/>';
+  return '<circle r="8" fill="'+color+'"/>';
+}
+
+var TAB='ov',SEL=null,STAB='reg',PTAB='list',CUR=today().slice(0,7),MAPCITY=null,OVEXPAND=false;
+var LIN=S.lines[0].id;
+var QSHIP={},QSALE={},EXTRA={},ORDER=null,PHOTO_WARN=null,RECIPE=null,DRAFT=[],SEL_INST=null,COMPIMG='';
+var DIY_DRAG=null,GHOST=null;
+function qo(obj,sid){if(!obj[sid])obj[sid]={};return obj[sid]}
+function curLine(){return lineOf(LIN)||S.lines[0]}
+var app=document.getElementById('app');
+function go(t){TAB=t;SEL=null;ORDER=null;RECIPE=null;render()}
+
+function render(){
+  var tabs=[['ov','总览'],['stores','店铺'],['goods','货品'],['data','数据与设置']];
+  var h='<div class="hd"><div><div class="ttl">寄售台账</div><div class="sub">按品类分账 · 月结回款 · 地图总览</div></div>'
+   +'<div class="hd-right"><select id="line-sel" class="lsel" title="切换品类">'
+   +S.lines.map(function(l){return '<option value="'+l.id+'"'+(l.id===LIN?' selected':'')+'>'+esc(l.name)+'</option>'}).join('')
+   +'</select>'
+   +'<button class="btn ghost sm" data-act="expjson">'+ic('dl',14)+'备份</button>'
+   +'<button class="btn ghost sm" data-act="expcsv">'+ic('dl',14)+'导出CSV</button></div></div>'
+   +'<div class="tabs">'+tabs.map(function(t){return '<button class="tab'+(TAB===t[0]?' on':'')+'" data-tab="'+t[0]+'">'+t[1]+'</button>'}).join('')+'</div>';
+  if(TAB==='ov')h+=vOverview();
+  else if(TAB==='stores')h+=vStores();
+  else if(TAB==='goods')h+=vGoods();
+  else h+=vData();
+  if(RECIPE){var rp=prod(RECIPE);if(rp){app.innerHTML=diyPage(rp);after();return}}
+  app.innerHTML=h;
+  after();
+}
+function after(){
+  var pf=document.getElementById('f-prodimg');
+  if(pf)pf.onchange=function(){onImg(function(d){var p=document.getElementById('imgprev');if(p){p.innerHTML='<img src="'+d+'" style="width:100%;height:100%;object-fit:cover;border-radius:9px">';p.dataset.img=d}})};
+  if(document.getElementById('xp-in'))attachPicker('xp');
+  var pm=document.getElementById('pay-month');
+  if(pm){pm.onchange=suggestPay;suggestPay()}
+  var mi=document.getElementById('m-input');
+  if(mi)mi.onchange=function(){if(this.value){CUR=this.value;render()}};
+  var ls=document.getElementById('line-sel');
+  if(ls)ls.onchange=function(){LIN=this.value;SEL=null;ORDER=null;MAPCITY=null;RECIPE=null;render()};
+  var ef=document.getElementById('impfile');
+  if(ef)ef.onchange=doImport;
+  var ph=document.getElementById('photo-in');
+  if(ph)ph.onchange=onPhotos;
+  var ci=document.getElementById('c-img');
+  if(ci)ci.onchange=function(){onImg.call(this,function(d){COMPIMG=d;var b=document.getElementById('c-imgprev');if(b)b.innerHTML='<img src="'+d+'" style="width:100%;height:100%;object-fit:cover;border-radius:9px">'})};
+  ['rc-base','rc-asm'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.oninput=updCostLine;
+  });
+}
+function updCostLine(){
+  var cost=diyCost(DRAFT);
+  var b=parseFloat((document.getElementById('rc-base')||{}).value)||0;
+  var a=parseFloat((document.getElementById('rc-asm')||{}).value)||0;
+  var lab=Math.round((b+a)/60*(S.settings.wagePerHour||30)*100)/100;
+  var p=prod(RECIPE)||{price:0};
+  var total=Math.round((cost+lab)*100)/100;
+  var el;
+  el=document.getElementById('rc-cost');if(el)el.textContent='¥'+fmt(cost);
+  el=document.getElementById('rc-labor');if(el)el.textContent='¥'+fmt(lab);
+  el=document.getElementById('rc-total');if(el)el.textContent='¥'+fmt(total);
+  el=document.getElementById('rc-margin');if(el)el.textContent=(p.price?('毛利率 '+Math.round((1-total/p.price)*100)+'%（售价 ¥'+fmt(p.price)+'）'):'—');
+}
+function svgPt(svg,cx,cy){var r=svg.getBoundingClientRect();return{x:(cx-r.left)/r.width*620,y:(cy-r.top)/r.height*320}}
+var SNAP=20;
+function snapX(v){return Math.max(20,Math.min(600,Math.round(v/SNAP)*SNAP))}
+function snapY(v){return Math.max(20,Math.min(300,Math.round(v/SNAP)*SNAP))}
+app.addEventListener('pointerdown',function(e){
+  var chipEl=e.target.closest('.palchip');
+  if(chipEl){
+    DIY_DRAG={cid:chipEl.dataset.cid,moved:0,sx:e.clientX,sy:e.clientY};
+    GHOST=document.createElement('div');GHOST.className='dragghost';GHOST.textContent=chipEl.textContent;
+    GHOST.style.left=(e.clientX+10)+'px';GHOST.style.top=(e.clientY+10)+'px';
+    document.body.appendChild(GHOST);
+    e.preventDefault();
+    return;
+  }
+  var g=e.target.closest('#diy-svg [data-idx]');
+  if(g){
+    DIY_DRAG={idx:+g.dataset.idx,moved:0,sx:e.clientX,sy:e.clientY};
+    e.preventDefault();
+  }
+});
+document.addEventListener('pointermove',function(e){
+  if(!DIY_DRAG)return;
+  DIY_DRAG.moved=Math.max(DIY_DRAG.moved,Math.abs(e.clientX-DIY_DRAG.sx)+Math.abs(e.clientY-DIY_DRAG.sy));
+  if(DIY_DRAG.cid){
+    if(GHOST){GHOST.style.left=(e.clientX+10)+'px';GHOST.style.top=(e.clientY+10)+'px'}
+  }else{
+    var svg=document.getElementById('diy-svg');if(!svg)return;
+    var pt=svgPt(svg,e.clientX,e.clientY);
+    var it=DRAFT[DIY_DRAG.idx];if(!it)return;
+    it.x=snapX(pt.x);it.y=snapY(pt.y);
+    var el=svg.querySelector('[data-idx="'+DIY_DRAG.idx+'"]');
+    if(el)el.setAttribute('transform','translate('+it.x+','+it.y+')');
+  }
+});
+document.addEventListener('pointerup',function(e){
+  if(!DIY_DRAG)return;
+  var d=DIY_DRAG;DIY_DRAG=null;
+  if(GHOST){GHOST.remove();GHOST=null}
+  if(d.cid){
+    var svg=document.getElementById('diy-svg');
+    if(svg){
+      var r=svg.getBoundingClientRect();
+      if(e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom){
+        var pt=svgPt(svg,e.clientX,e.clientY);
+        DRAFT.push({cid:d.cid,x:snapX(pt.x),y:snapY(pt.y)});
+        SEL_INST=DRAFT.length-1;
+      }
+    }
+    render();
+  }else{
+    if(d.moved<4){SEL_INST=(SEL_INST===d.idx?null:d.idx)}
+    render();
+  }
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&RECIPE){RECIPE=null;DRAFT=[];SEL_INST=null;render()}
+});
+function onImg(cb){
+  var f=this.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(ev){
+    var img=new Image();
+    img.onload=function(){
+      var s=Math.min(1,400/Math.max(img.width,img.height));
+      var c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      cb(c.toDataURL('image/jpeg',0.8));
+    };
+    img.src=ev.target.result;
+  };
+  r.readAsDataURL(f);
+}
+function onPhotos(){
+  var files=this.files;if(!files||!files.length)return;
+  var note=(document.getElementById('photo-note')||{}).value||'';
+  var pending=files.length,dt=today();
+  for(var i=0;i<files.length;i++){
+    (function(f){
+      var r=new FileReader();
+      r.onload=function(ev){
+        var img=new Image();
+        img.onload=function(){
+          var s=Math.min(1,500/Math.max(img.width,img.height));
+          var c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);
+          c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+          S.photos.push({id:uid(),storeId:SEL,date:dt,note:note,img:c.toDataURL('image/jpeg',0.8)});
+          if(--pending===0){save();render()}
+        };
+        img.src=ev.target.result;
+      };
+      r.readAsDataURL(f);
+    })(files[i]);
+  }
+}
+function attachPicker(pre){
+  var inp=document.getElementById(pre+'-in'),drop=document.getElementById(pre+'-drop');
+  inp.oninput=function(){
+    var q=inp.value.trim().toLowerCase();
+    if(!q){drop.hidden=true;return}
+    var hits=lineProds(LIN).filter(function(p){return p.code.toLowerCase().indexOf(q)>-1||p.name.toLowerCase().indexOf(q)>-1}).slice(0,8);
+    drop.innerHTML=hits.map(function(p){return '<div class="pk-item" data-pid="'+p.id+'">'+thumb(p,28)+'<span>'+esc(p.code)+' '+esc(p.name)+'</span></div>'}).join('')
+      ||'<div class="pk-item muted">未找到该货品，请先在「货品」清单中录入</div>';
+    drop.hidden=false;
+  };
+  drop.onclick=function(e){
+    var it=e.target.closest('[data-pid]');if(!it)return;
+    var p=prod(it.dataset.pid);if(!p)return;
+    if(pre==='xp'){
+      var ex=qo(EXTRA,SEL);
+      if(!ex[p.id])ex[p.id]=1;
+      inp.value='';drop.hidden=true;render();return;
+    }
+  };
+}
+function suggestPay(){
+  var m=document.getElementById('pay-month').value,tot=0,st=store(SEL);
+  S.sales.forEach(function(r){
+    if(r.storeId===SEL&&r.date.slice(0,7)===m){var p=prod(r.productId);if(p&&st)tot+=(+r.qty)*settlePrice(p,st)}
+  });
+  document.getElementById('pay-amt').value=Math.round(tot*100)/100||'';
+}
+function stepperHTML(f,pid,q,max){
+  return '<span class="stepper"><button type="button" data-act="sqty" data-f="'+f+'" data-pid="'+pid+'" data-d="-1" '+(!q?'disabled':'')+'>'+ic('minus',13)+'</button><input class="qv" type="number" min="0" '+(max!=null?'max="'+max+'"':'')+' value="'+(q||0)+'" data-f="'+f+'" data-pid="'+pid+'"><button type="button" data-act="sqty" data-f="'+f+'" data-pid="'+pid+'" data-d="1" '+(max!=null&&q>=max?'disabled':'')+'>'+ic('plus',13)+'</button></span>';
+}
+function kpi(v,l){return '<div class="kpi"><div class="v num">'+v+'</div><div class="l">'+l+'</div></div>'}
+
+function vOverview(){
+  var al=allAlerts(LIN);
+  var lname=curLine().name;
+  var lst=lineStores(LIN);
+  var actN=lst.filter(function(st){return !isStopped(st)}).length;
+  var stpN=lst.length-actN;
+  var h='<div class="kpis">'
+   +'<div class="kpi click" data-act="ovpay"><div class="v num">¥'+fmt(paidTotal())+'</div><div class="l">累计回款（全部品类 · 已到账）· 点击'+(OVEXPAND?'收起':'查看')+lname+'明细</div></div>'
+   +kpi(actN,'合作店铺 · '+lname+(stpN?'（另 '+stpN+' 家已停止）':''))+'</div>';
+  if(al.over.length||al.low.length){
+    h+='<div class="alertbox"><h3>'+ic('bell',16)+' 提醒（'+esc(lname)+'）</h3>';
+    al.over.forEach(function(a){h+='<div class="arow"><span class="rank">'+stNo(a.sid)+'</span><span class="grow">'+esc(a.store)+'：上次回款 '+a.date+'，已 '+a.gap+' 天未回款</span>'+chip('超期 '+(a.gap-S.settings.alertDays)+' 天','c-danger')+'</div>'});
+    al.low.forEach(function(a){var p=prod(a.pid);h+='<div class="arow"><span class="rank">'+stNo(a.sid)+'</span><span class="grow">'+esc(a.store)+' · '+(p?esc(p.code)+' '+esc(p.name):'')+' 仅剩 '+a.left+' 件</span>'+chip(a.left<=0?'已售罄，建议补货':'需补货','c-warn')+'</div>'});
+    h+='</div>';
+  }else{
+    h+='<div class="alertbox"><h3>'+ic('bell',16)+' 提醒（'+esc(lname)+'）</h3><div class="arow"><span class="grow muted">暂无回款超期与低库存提醒</span>'+chip('一切正常','c-pos')+'</div></div>';
+  }
+  if(OVEXPAND){
+    var pays=S.payments.filter(function(r){var st=store(r.storeId);return st&&(st.line||'l1')===LIN})
+      .slice().sort(function(a,b){return String(b.date||b.month).localeCompare(String(a.date||a.month))});
+    var paidSum=0;pays.forEach(function(r){if(r.status==='paid')paidSum+=+r.amount});
+    var allSum=0;pays.forEach(function(r){allSum+=+r.amount});
+    h+='<h2 class="sec">回款明细 · '+esc(lname)+'（共 '+pays.length+' 笔 · 已到账 ¥'+fmt(paidSum)+' · 全部账额 ¥'+fmt(allSum)+'）</h2>';
+    if(!pays.length)h+='<div class="empty">该品类还没有回款记录</div>';
+    else{
+      h+='<table class="tb"><thead><tr><th>回款日期</th><th>店铺</th><th>账期月份</th><th class="num">金额</th><th>状态</th><th>备注</th><th></th></tr></thead><tbody>';
+      pays.forEach(function(r){
+        var st=store(r.storeId),sc=ST[r.status]||ST.unpaid;
+        h+='<tr><td class="num">'+esc(r.date||'—')+'</td><td><span class="rank">'+stNo(r.storeId)+'</span> '+(st?esc(st.name):'(已删除)')+'</td><td class="num">'+esc(r.month||'—')+'</td>'
+         +'<td class="num" style="font-weight:500">¥'+fmt(r.amount)+'</td><td>'+chip(sc[0],sc[1])+'</td><td class="muted">'+esc(r.note||'—')+'</td>'
+         +'<td><span class="rowact">'
+         +(r.status!=='paid'?'<button class="ibtn" data-act="payok" data-id="'+r.id+'" title="标记已回款">'+ic('edit',14)+'</button>':'')
+         +'<button class="ibtn" data-act="paydel" data-id="'+r.id+'">'+ic('del',14)+'</button></span></td></tr>';
+      });
+      h+='</tbody></table>';
+    }
+  }
+  h+=vMapBlock();
+  h+=vPhotoWall();
+  return h;
+}
+function vPhotoWall(){
+  var photos=S.photos.slice().sort(function(a,b){return String(b.date).localeCompare(String(a.date))}).slice(0,24);
+  var h='<h2 class="sec">快递照片留档（全部品类 · 最近 '+photos.length+' 张）</h2>';
+  if(!photos.length)return h+'<div class="note">还没有快递照片。发货时在店铺「登记」页上传快递单照片，这里会自动汇总，出问题随时回溯。</div>';
+  h+='<div class="photogrid">';
+  photos.forEach(function(ph){
+    var st=store(ph.storeId);
+    var lname=st?((lineOf(st.line||'l1')||{}).name||''):'';
+    h+='<div class="phcard"><img src="'+ph.img+'" title="'+esc(ph.note||'')+'">'
+     +'<div class="phm"><span>'+(st?esc(st.name):'(已删)')+(lname?' · '+esc(lname):'')+'</span></div>'
+     +'<div class="phm"><span class="num">'+esc(ph.date)+'</span>'+(ph.note?'<span>'+esc(ph.note)+'</span>':'')+'</div></div>';
+  });
+  return h+'</div>';
+}
+
+function vMapBlock(){
+  var located=[],unknown=[];
+  lineStores(LIN).forEach(function(st){
+    if(st.city&&CITY[st.city])located.push(st);
+    else unknown.push(st);
+  });
+  var byCity={};
+  located.forEach(function(st){
+    if(!byCity[st.city])byCity[st.city]=[];
+    byCity[st.city].push(st);
+  });
+  var cities=Object.keys(byCity);
+  if(!MAPCITY||!byCity[MAPCITY])MAPCITY=cities[0]||null;
+  function projW(lon,lat){return [(lon+180)/360*1000,(88-lat)/148*640]}
+  function pathD(pts){var d='M';pts.forEach(function(p,i){var xy=projW(p[0],p[1]);d+=(i?'L':'')+xy[0].toFixed(1)+','+xy[1].toFixed(1)});return d+'Z'}
+  var h='<h2 class="sec">销售地图 · '+esc(curLine().name)+'</h2>';
+  if(!lineStores(LIN).length)return h+'<div class="note">该品类还没有店铺，到「店铺」页添加后这里会显示销售地图。</div>';
+  var svg='<svg viewBox="0 0 1000 640" style="width:100%;height:auto">';
+  WORLD.forEach(function(pts){svg+='<path d="'+pathD(pts)+'" fill="color-mix(in srgb, var(--kimi-color-text-primary) 5%, transparent)" stroke="var(--kimi-color-border)" stroke-width="1"/>'});
+  cities.forEach(function(c){
+    var sts=byCity[c];
+    var soldAll2=0,activeN=0;
+    sts.forEach(function(st){soldAll2+=storeRows(st.id).reduce(function(a,r){return a+r.sold},0);if(!isStopped(st))activeN++});
+    var xy=projW(CITY[c][0],CITY[c][1]);
+    var r=6+Math.min(14,soldAll2/4);
+    var on=MAPCITY===c;
+    var lx=Math.max(24,Math.min(976,xy[0]));
+    svg+='<g class="mapdot" data-act="mapsel" data-city="'+esc(c)+'">'
+     +'<circle class="halo" cx="'+xy[0]+'" cy="'+xy[1]+'" r="'+(r+5)+'" fill="none" stroke="'+(on?'var(--kimi-color-text-primary)':'transparent')+'" stroke-width="1.5"/>'
+     +'<circle cx="'+xy[0]+'" cy="'+xy[1]+'" r="'+r+'" fill="color-mix(in srgb, var(--kimi-chart-1) '+(on?'45%':'28%')+', transparent)" stroke="var(--kimi-color-surface)" stroke-width="1.5"/>'
+     +'<text class="maplbl" x="'+lx+'" y="'+(xy[1]-r-8)+'" text-anchor="middle" font-size="12" font-weight="500" fill="var(--kimi-color-text-primary)">'+esc(c)+(activeN===0?'（全停）':'')+'</text>'
+     +'<text x="'+xy[0]+'" y="'+(xy[1]+4)+'" text-anchor="middle" font-size="11" font-weight="600" fill="#ffffff">'+soldAll2+'</text>'
+     +'</g>';
+  });
+  svg+='</svg>';
+  h+='<div class="note">圆点越大代表该城市累计售出越多，点击圆点查看该城市各店铺情况。海外城市可直接填写。</div>'+svg;
+  if(MAPCITY&&byCity[MAPCITY]){
+    var sts=byCity[MAPCITY],cm=today().slice(0,7);
+    var tSold=0,tM=0,tLeft=0,tOw=0;
+    sts.forEach(function(st){
+      storeRows(st.id).forEach(function(r){tSold+=r.sold;tLeft+=r.left});
+      S.sales.forEach(function(r){if(r.storeId===st.id&&r.date.slice(0,7)===cm)tM+=+r.qty});
+      tOw+=owing(st.id);
+    });
+    h+='<div class="form" style="margin-top:12px"><h3>'+ic('pin',16)+' '+esc(MAPCITY)+' · 共 '+sts.length+' 家店</h3>'
+     +'<div class="kpis" style="margin-bottom:12px">'+kpi(tSold,'累计售出（件）')+kpi(tM,'本月售出（件）')+kpi(tLeft,'在店（件）')+kpi('¥'+fmt(tOw),'待回款')+'</div>'
+     +'<table class="tb"><thead><tr><th>#</th><th>店铺</th><th>介绍</th><th class="num">累计售出</th><th class="num">本月售出</th><th class="num">待回款</th></tr></thead><tbody>';
+    sts.forEach(function(st){
+      var s1=0,s2=0;
+      storeRows(st.id).forEach(function(r){s1+=r.sold});
+      S.sales.forEach(function(r){if(r.storeId===st.id&&r.date.slice(0,7)===cm)s2+=+r.qty});
+      h+='<tr><td><span class="rank">'+stNo(st.id)+'</span></td><td class="pname" style="cursor:pointer" data-act="sopen" data-id="'+st.id+'">'+esc(st.name)+(isStopped(st)?' '+chip('已停止','c-gray'):'')+'</td><td class="muted">'+esc(st.intro||'—')+'</td><td class="num">'+s1+'</td><td class="num">'+s2+'</td><td class="num">'+(owing(st.id)?'¥'+fmt(owing(st.id)):'—')+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+  }
+  if(unknown.length){
+    h+='<div class="alertbox"><h3>未定位的店铺（城市未填或不在坐标库）</h3>';
+    unknown.forEach(function(st){h+='<div class="arow"><span class="rank">'+stNo(st.id)+'</span><span class="grow">'+esc(st.name)+(isStopped(st)?'（已停止合作）':'')+'（当前城市：'+(st.city?esc(st.city):'未填写')+'）</span><button class="btn ghost sm" data-act="stedit" data-id="'+st.id+'">'+ic('edit',13)+'修改</button></div>'});
+    h+='</div>';
+  }
+  return h;
+}
+
+function storeFormHTML(){
+  var cityOpts=Object.keys(CITY).map(function(c){return '<option value="'+c+'">'});
+  return '<form data-form="store"><div class="fgrid">'
+   +'<div class="fld"><label>店铺名称 *（归入当前品类：'+esc(curLine().name)+'）</label><input id="st-name" required placeholder="如 A店"></div>'
+   +'<div class="fld"><label>所在城市</label><input id="st-city" list="citylist" placeholder="如 上海 / 东京 / 巴黎"><datalist id="citylist">'+cityOpts.join('')+'</datalist></div>'
+   +'<div class="fld"><label>联系方式</label><input id="st-contact" placeholder="微信 / 电话，方便对账时联系"></div>'
+   +'<div class="fld"><label>邮寄信息</label><input id="st-mail" placeholder="收货地址 + 收件人，发货用"></div>'
+   +'<div class="fld"><label>结算比例（%）</label><input id="st-ratio" type="number" min="0" max="100" step="1" value="60"></div>'
+   +'<div class="fld" style="grid-column:1/-1"><label>一句话介绍</label><input id="st-intro" placeholder="如 安福路街边店，主卖项链"></div>'
+   +'</div><div style="margin-top:12px"><button class="btn" type="submit">'+ic('plus',14)+'添加店铺</button></div></form>';
+}
+
+function vStores(){
+  var lst=lineStores(LIN);
+  if(!lst.length){
+    return '<details open><summary>'+ic('plus',14)+'新增店铺（'+esc(curLine().name)+'）</summary>'+storeFormHTML()+'</details>';
+  }
+  if(!SEL||!store(SEL)||(store(SEL).line||'l1')!==LIN){SEL=null;
+    var act=lst.filter(function(st){return !isStopped(st)});
+    var stopped=lst.filter(function(st){return isStopped(st)});
+    var h='<details><summary>'+ic('plus',14)+'新增店铺（'+esc(curLine().name)+'）</summary>'+storeFormHTML()+'</details>';
+    h+='<div class="pgrid">';
+    act.concat(stopped).forEach(function(st){
+      var i=lst.indexOf(st);
+      var rows=storeRows(st.id),totLeft=0,totSold=0;
+      rows.forEach(function(r){totLeft+=r.left;totSold+=r.sold});
+      var d=lastPayDate(st.id),gap=d?daysBetween(d,today()):null;
+      h+='<div class="scard'+(isStopped(st)?' stopped':'')+'" data-act="sopen" data-id="'+st.id+'"><div class="nm"><span class="rank">'+(i+1)+'</span>'+esc(st.name)
+       +(st.city?' '+chip(st.city,'c-blue'):'')
+       +(isStopped(st)?chip('已停止合作','c-gray'):(gap!==null&&gap>S.settings.alertDays?chip('回款超期','c-danger'):''))+'</div>'
+       +'<div class="mt">'+(st.intro?esc(st.intro)+' · ':'')+esc(st.contact||'')+'</div>'
+       +(st.mail?'<div class="mt">邮寄：'+esc(st.mail)+'</div>':'')
+       +'<div class="mt">结算比例 '+Math.round(st.ratio*100)+'% · 在店 '+totLeft+' 件 · 累计售出 '+totSold+' 件 · 待回款 ¥'+fmt(owing(st.id))+'</div>'
+       +'<div class="mt">上次回款：'+(d?d+'（'+gap+' 天前）':'—')+'</div></div>';
+    });
+    return h+'</div>';
+  }
+  var st=store(SEL);
+  var stopped=isStopped(st);
+  var rows=storeRows(SEL);
+  var tSh=0,tSo=0,tLeft=0;rows.forEach(function(r){tSh+=r.shipped;tSo+=r.sold;tLeft+=r.left});
+  var cm=today().slice(0,7),mSold=0;S.sales.forEach(function(r){if(r.storeId===SEL&&r.date.slice(0,7)===cm)mSold+=+r.qty});
+  var d=lastPayDate(SEL),gap=d?daysBetween(d,today()):null;
+  var h='<div class="backrow"><button class="btn ghost sm" data-act="sback">'+ic('left',14)+'全部店铺</button>'
+   +'<span class="rank" style="width:26px;height:26px">'+stNo(SEL)+'</span>'
+   +'<span style="font-size:17px;font-weight:500">'+esc(st.name)+'</span>'
+   +(st.city?chip(st.city,'c-blue'):'')
+   +(stopped?chip('已停止合作','c-gray'):'')
+   +chip('结算比例 '+Math.round(st.ratio*100)+'%','c-gray')
+   +(gap!==null&&!stopped&&gap>S.settings.alertDays?chip('回款超期 '+gap+' 天','c-danger'):'')
+   +'<span class="muted">'+(st.intro?esc(st.intro)+' · ':'')+(st.contact?' '+esc(st.contact):'')+(st.mail?' · 邮寄：'+esc(st.mail):'')+'</span>'
+   +'<span style="flex:1"></span>'
+   +(stopped?'<button class="btn sm" data-act="stresume" data-id="'+st.id+'">恢复合作</button>':'<button class="btn ghost sm" data-act="ststop" data-id="'+st.id+'">停止合作</button>')
+   +'</div>';
+  h+='<div class="kpis">'+kpi(tSh,'累计出货')+kpi(tSo,'累计售出')+kpi(tLeft,'在店剩余')+kpi(mSold,'本月售出')+kpi('¥'+fmt(owing(SEL)),'待回款')+'</div>';
+  h+='<div class="seg">'
+   +'<label><input type="radio" name="stab" value="reg"'+(STAB==='reg'?' checked':'')+'><span>登记</span></label>'
+   +'<label><input type="radio" name="stab" value="log"'+(STAB==='log'?' checked':'')+'><span>每期明细</span></label>'
+   +'<label><input type="radio" name="stab" value="sum"'+(STAB==='sum'?' checked':'')+'><span>总数据</span></label></div>';
+
+  if(STAB==='reg'){
+    if(stopped){
+      h+='<div class="alertbox"><h3>已停止合作</h3><div class="arow"><span class="grow">该店铺已停止合作：不能再登记新的出货、售出与回款，历史数据完整保留，可在「每期明细」「总数据」中查看。</span><button class="btn sm" data-act="stresume" data-id="'+st.id+'">恢复合作</button></div></div>';
+    }else{
+    if(PHOTO_WARN&&PHOTO_WARN.storeId===SEL){
+      var done=S.photos.some(function(ph){return ph.storeId===SEL&&ph.date>=PHOTO_WARN.date});
+      if(done)PHOTO_WARN=null;
+    }
+    if(PHOTO_WARN&&PHOTO_WARN.storeId===SEL){
+      h+='<div class="alertbox" style="border-color:var(--kimi-color-warning)"><h3 style="color:var(--kimi-color-warning)">'+ic('warn',16)+' 待拍照</h3><div class="arow"><span class="grow">'+PHOTO_WARN.date+' 已确认出货，还未上传快递照片，请在下方「快递寄出拍照记录」中上传。</span></div></div>';
+    }
+    var qs=qo(QSHIP,SEL),ex=qo(EXTRA,SEL);
+    var shipPids=rows.map(function(r){return r.pid});
+    Object.keys(ex).forEach(function(pid){if(shipPids.indexOf(pid)<0)shipPids.push(pid)});
+    h+='<details open><summary>'+ic('plus',14)+'登记出货 / 补货（点选数量，可直接输入）</summary>'
+     +'<div class="fgrid" style="margin-bottom:12px"><div class="fld"><label>出货日期</label><input id="sh-date" type="date" value="'+today()+'"></div>'
+     +'<div class="fld" style="align-self:end"><button class="btn" data-act="shipgo" '+(shipPids.length?'':'disabled')+'>'+ic('plus',14)+'确认出货并生成订货单</button></div></div>';
+    if(!shipPids.length)h+='<div class="empty">该店还没有订过货，先搜索添加：</div>';
+    h+='<table class="tb"><tbody>';
+    shipPids.forEach(function(pid){
+      var p=prod(pid);if(!p)return;
+      var sh=shipped(SEL,pid),left=sh-sold(SEL,pid);
+      h+='<tr><td style="width:32px">'+thumb(p,28)+'</td><td><div class="pname">'+esc(p.name)+'</div><div class="pcode">'+esc(p.code)+' · 累计出货 '+sh+' · 在店 '+left+'</div></td>'
+       +'<td style="width:150px">'+stepperHTML('ship',pid,qs[pid]||0,null)+'</td></tr>';
+    });
+    h+='</tbody></table>'
+     +'<div style="margin-top:12px" class="fld"><label>加一款没订过的货（输入货号或名称搜索）</label><div class="picker"><input id="xp-in" autocomplete="off" placeholder="如 E-007 或 星星"><div class="pk-drop" id="xp-drop" hidden></div></div></div>'
+     +'</details>';
+
+    var qa=qo(QSALE,SEL);
+    var salePids=rows.filter(function(r){return r.left>0}).map(function(r){return r.pid});
+    h+='<details><summary>'+ic('plus',14)+'登记售出（对方报卖的货，点选数量，可直接输入）</summary>'
+     +'<div class="fgrid" style="margin-bottom:12px"><div class="fld"><label>售出日期</label><input id="sa-date" type="date" value="'+today()+'"></div>'
+     +'<div class="fld" style="align-self:end"><button class="btn" data-act="salego" '+(salePids.length?'':'disabled')+'>'+ic('plus',14)+'确认售出</button></div></div>';
+    if(!salePids.length)h+='<div class="empty">当前没有在售的货</div>';
+    h+='<table class="tb"><tbody>';
+    salePids.forEach(function(pid){
+      var p=prod(pid);if(!p)return;
+      var left=shipped(SEL,pid)-sold(SEL,pid);
+      h+='<tr><td style="width:32px">'+thumb(p,28)+'</td><td><div class="pname">'+esc(p.name)+'</div><div class="pcode">'+esc(p.code)+' · 在店 '+left+'</div></td>'
+       +'<td style="width:150px">'+stepperHTML('sale',pid,qa[pid]||0,left)+'</td></tr>';
+    });
+    h+='</tbody></table></details>';
+
+    h+='<details><summary>'+ic('plus',14)+'登记回款（按店铺、按月份一笔账）</summary><form data-form="pay"><div class="fgrid">'
+     +'<div class="fld"><label>账期月份 *</label><input id="pay-month" type="month" value="'+cm+'"></div>'
+     +'<div class="fld"><label>回款金额（元）*</label><input id="pay-amt" type="number" min="0" step="0.01" required></div>'
+     +'<div class="fld"><label>回款状态</label><div class="seg">'
+     +'<label><input type="radio" name="pay-status" value="paid" checked><span>已回款</span></label>'
+     +'<label><input type="radio" name="pay-status" value="invoiced"><span>已开发票未回款</span></label>'
+     +'<label><input type="radio" name="pay-status" value="unpaid"><span>未回款</span></label>'
+     +'</div></div>'
+     +'<div class="fld"><label>回款日期</label><input id="pay-date" type="date" value="'+today()+'"></div>'
+     +'<div class="fld" style="grid-column:1/-1"><label>备注</label><input id="pay-note" placeholder="可留空，如转账单号后四位"></div>'
+     +'</div><div style="margin-top:12px"><button class="btn" type="submit">'+ic('plus',14)+'登记回款</button></div></form></details>';
+
+    var photos=S.photos.filter(function(ph){return ph.storeId===SEL}).sort(function(a,b){return b.date.localeCompare(a.date)});
+    h+='<details open><summary>'+ic('img',15)+'快递寄出拍照记录（每次发货必拍，共 '+photos.length+' 张）</summary>'
+     +'<div class="fgrid" style="margin-bottom:12px">'
+     +'<div class="fld"><label>照片备注（可选，如快递单号）</label><input id="photo-note" placeholder="可留空"></div>'
+     +'<div class="fld" style="align-self:end"><label class="btn">'+ic('ul',14)+'拍照 / 选择照片上传<input type="file" id="photo-in" accept="image/*" multiple hidden></label></div>'
+     +'</div>';
+    if(!photos.length)h+='<div class="empty">还没有照片，发货后记得拍快递单留档</div>';
+    else{
+      h+='<div class="photogrid">';
+      photos.forEach(function(ph){
+        h+='<div class="phcard"><img src="'+ph.img+'"><div class="phm"><span class="num">'+esc(ph.date)+'</span><span class="rowact" style="opacity:1"><button class="ibtn" data-act="photodel" data-id="'+ph.id+'">'+ic('del',13)+'</button></span></div>'
+         +(ph.note?'<div class="phm">'+esc(ph.note)+'</div>':'')+'</div>';
+      });
+      h+='</div>';
+    }
+    h+='</details>';
+
+    if(ORDER&&ORDER.storeId===SEL){
+      var ost=store(ORDER.storeId);
+      h+='<div class="form"><h3>订货单已生成 · '+esc(ost?ost.name:'')+' · '+ORDER.date+'（共 '+ORDER.items.length+' 款 '+ORDER.totQty+' 件）</h3>'
+       +'<table class="tb osheet"><thead><tr><th></th><th>货号 / 名称</th><th class="num">售价</th><th class="num">结算价</th><th class="num">数量</th></tr></thead><tbody>';
+      ORDER.items.forEach(function(it){
+        var p=prod(it.pid);
+        h+='<tr><td>'+thumb(p,32)+'</td><td><div class="pname">'+(p?esc(p.name):'')+'</div><div class="pcode">'+(p?esc(p.code):'')+'</div></td>'
+         +'<td class="num">'+(p?'¥'+fmt(p.price):'')+'</td><td class="num">'+(p?'¥'+fmt(settlePrice(p,ost)):'')+'</td>'
+         +'<td class="num">'+it.qty+'</td></tr>';
+      });
+      h+='</tbody></table>'
+       +'<div class="muted" style="margin-top:8px">合计 '+ORDER.totQty+' 件 · 结算金额 ¥'+fmt(ORDER.totAmt)+' · 记得在上方上传快递照片</div>'
+       +'<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">'
+       +'<button class="btn sm" data-act="orderpng">'+ic('dl',14)+'导出为图片（PNG）</button>'
+       +'<button class="btn ghost sm" data-act="orderxls">'+ic('dl',14)+'导出为 Excel</button>'
+       +'<button class="btn ghost sm" data-act="orderclose">关闭</button></div></div>';
+    }
+    }
+  }
+  else if(STAB==='log'){
+    var months=storeMonths(SEL);
+    if(!months.length)h+='<div class="empty">暂无记录</div>';
+    months.forEach(function(m){
+      var sh=S.shipments.filter(function(r){return r.storeId===SEL&&r.date.slice(0,7)===m});
+      var sa=S.sales.filter(function(r){return r.storeId===SEL&&r.date.slice(0,7)===m});
+      var pay=paymentOf(SEL,m);
+      var shSum=0;sh.forEach(function(r){shSum+=+r.qty});
+      var saSum=0;sa.forEach(function(r){saSum+=+r.qty});
+      var sc=pay?ST[pay.status]:null;
+      h+='<details><summary><span style="font-weight:500">'+monthLabel(m)+'</span>'
+       +'<span class="muted">出货 '+shSum+' 件 · 售出 '+saSum+' 件 · 回款 '+(pay?'¥'+fmt(pay.amount)+'（'+esc(pay.date)+'）':'未登记')+'</span>'
+       +(pay?chip(sc[0],sc[1]):'')+'</summary>';
+      function mini(title,rows,act){
+        var x='<div style="margin-bottom:12px"><div class="pname" style="font-size:13px;margin-bottom:4px">'+title+'</div><table class="tb"><tbody>';
+        if(!rows.length)x+='<tr><td class="muted">无</td></tr>';
+        rows.forEach(function(r){
+          var p=prod(r.productId);
+          x+='<tr><td class="pcode num" style="width:84px">'+esc(r.date)+'</td><td style="width:32px">'+thumb(p,26)+'</td><td>'+(p?esc(p.name):'(已删除)')+'</td><td class="pcode">'+(p?esc(p.code):'-')+'</td><td class="num" style="text-align:right;width:60px">'+r.qty+' 件</td><td class="pcode">'+esc(r.note||'')+'</td><td style="width:36px"><span class="rowact"><button class="ibtn" data-act="'+act+'" data-id="'+r.id+'">'+ic('del',14)+'</button></span></td></tr>';
+        });
+        return x+'</tbody></table></div>';
+      }
+      h+=mini('订货（出货）',sh,'hdel');
+      h+=mini('售出',sa,'sadel');
+      h+='<div><div class="pname" style="font-size:13px;margin-bottom:4px">回款</div><table class="tb"><tbody>';
+      if(pay){var psc=ST[pay.status];
+        h+='<tr><td class="pcode num" style="width:84px">'+esc(pay.date)+'</td><td class="num">¥'+fmt(pay.amount)+'</td><td>'+chip(psc[0],psc[1])+'</td><td class="pcode">'+esc(pay.note||'')+'</td>'
+         +'<td style="width:76px"><span class="rowact">'
+         +(pay.status!=='paid'?'<button class="ibtn" data-act="payok" data-id="'+pay.id+'" title="标记已回款">'+ic('edit',14)+'</button>':'')
+         +'<button class="ibtn" data-act="paydel" data-id="'+pay.id+'">'+ic('del',14)+'</button></span></td></tr>';
+      }else h+='<tr><td class="muted">该月未登记回款</td></tr>';
+      h+='</tbody></table></div></details>';
+    });
+  }
+  else{
+    if(!rows.length)h+='<div class="empty">暂无出货记录</div>';
+    else{
+      var months2=storeMonths(SEL).slice().reverse();
+      var multi=months2.some(function(m){return m.slice(0,4)!==months2[0].slice(0,4)});
+      h+='<div class="tscroll"><table class="tb"><thead>'
+       +'<tr><th rowspan="2"></th><th rowspan="2">货号 / 名称</th><th colspan="'+months2.length+'" class="num" style="text-align:center;color:var(--kimi-chart-1)">订货件数</th><th colspan="'+months2.length+'" class="num" style="text-align:center;color:var(--kimi-chart-4)">售出件数</th><th rowspan="2" class="num" style="text-align:center">库存件数</th></tr>'
+       +'<tr>'+months2.map(function(m){return '<th class="num">'+mShort(m,multi)+'</th>'}).join('')
+       +months2.map(function(m){return '<th class="num">'+mShort(m,multi)+'</th>'}).join('')+'</tr></thead><tbody>';
+      rows.forEach(function(r){
+        var p=prod(r.pid);
+        h+='<tr><td>'+thumb(p,28)+'</td><td><div class="pname">'+(p?esc(p.name):'(已删除)')+'</div><div class="pcode">'+esc(p?p.code:'-')+'</div></td>';
+        months2.forEach(function(m){var v=shippedMonth(SEL,r.pid,m);h+='<td class="num">'+(v||'—')+'</td>'});
+        months2.forEach(function(m){var v=soldMonth(SEL,r.pid,m);h+='<td class="num">'+(v||'—')+'</td>'});
+        var stt=r.left<=0?chip('已售罄','c-gray'):r.left<=S.settings.lowStock?chip(r.left+'','c-warn'):chip(r.left+'','c-pos');
+        h+='<td class="num" style="font-weight:500;text-align:center">'+stt+'</td></tr>';
+      });
+      h+='<tr style="font-weight:500;background:var(--kimi-color-surface-muted)"><td></td><td>合计</td>';
+      months2.forEach(function(m){var v=0;rows.forEach(function(r){v+=shippedMonth(SEL,r.pid,m)});h+='<td class="num">'+(v||'—')+'</td>'});
+      months2.forEach(function(m){var v=0;rows.forEach(function(r){v+=soldMonth(SEL,r.pid,m)});h+='<td class="num">'+(v||'—')+'</td>'});
+      h+='<td class="num" style="text-align:center">'+tLeft+'</td></tr>';
+      h+='</tbody></table></div><div class="muted" style="margin-top:6px">库存件数 = 累计订货 − 累计售出，按当前结存计算。</div>';
+    }
+  }
+  return h;
+}
+
+function vGoods(){
+  var h='<div class="seg">'
+   +'<label><input type="radio" name="gtab" value="list"'+(PTAB==='list'?' checked':'')+'><span>货品清单</span></label>'
+   +'<label><input type="radio" name="gtab" value="sales"'+(PTAB==='sales'?' checked':'')+'><span>货品销售总表（按月）</span></label>'
+   +'<label><input type="radio" name="gtab" value="comps"'+(PTAB==='comps'?' checked':'')+'><span>配件库（用料成本）</span></label>'
+   +'<label><input type="radio" name="gtab" value="finance"'+(PTAB==='finance'?' checked':'')+'><span>财务统计</span></label></div>';
+  if(PTAB==='list')return h+vProdList();
+  if(PTAB==='comps')return h+vComps();
+  if(PTAB==='finance')return h+vFinance();
+  return h+vProdSales();
+}
+function vProdList(){
+  var prods=lineProds(LIN);
+  var h='<div class="note">当前品类：'+esc(curLine().name)+'。录完货品后点每行的「用料」按钮，在弹出的窗口里像拼积木一样把配件拖进画布拼出它，系统自动算用料成本；同一窗口还能填制作时间。</div>';
+  h+='<form class="form" data-form="product"><h3>录入新货品（归入：'+esc(curLine().name)+'）</h3><div class="fgrid">'
+   +'<div class="fld"><label>货品图片</label><div class="imgup"><span class="imgprev" id="imgprev">'+ic('img',24)+'</span>'
+   +'<label class="btn ghost sm">'+ic('ul',14)+'上传图片<input type="file" id="f-prodimg" accept="image/*" hidden></label>'
+   +'<span class="muted">JPG/PNG，自动压缩至 400px</span></div></div>'
+   +'<div class="fld"><label>货号 *</label><input id="p-code" required placeholder="如 N-001"></div>'
+   +'<div class="fld"><label>货品名称 *</label><input id="p-name" required placeholder="如 月光石项链"></div>'
+   +'<div class="fld"><label>类别</label><select id="p-cat">'+CATS.map(function(c){return '<option>'+c+'</option>'}).join('')+'</select></div>'
+   +'<div class="fld"><label>售价（元）</label><input id="p-price" type="number" min="0" step="0.01" placeholder="0.00"></div>'
+   +'</div><div style="margin-top:12px"><button class="btn" type="submit">'+ic('plus',14)+'添加货品</button></div></form>';
+  h+='<h2 class="sec">清单（'+esc(curLine().name)+' · 共 '+prods.length+' 款）</h2>';
+  if(!prods.length)return h+'<div class="empty">该品类还没有货品</div>';
+  h+='<table class="tb"><thead><tr><th></th><th>货号 / 名称</th><th>类别</th><th class="num">售价</th><th class="num">用料成本</th><th class="num">累计出货</th><th class="num">累计售出</th><th class="num">在店</th><th></th></tr></thead><tbody>';
+  prods.forEach(function(p){
+    var sh=0,so=0;
+    lineStores(LIN).forEach(function(st){sh+=shipped(st.id,p.id);so+=sold(st.id,p.id)});
+    var inUse=sh>0;
+    var cost=diyCost(p.diy);
+    h+='<tr><td>'+thumb(p,32)+'</td>'
+     +'<td><div class="pname">'+esc(p.name)+'</div><div class="pcode">'+esc(p.code)+'</div></td>'
+     +'<td>'+chip(p.cat,CATCLR[p.cat]||'c-gray')+'</td>'
+     +'<td class="num">'+(p.price?'¥'+fmt(p.price):'—')+'</td>'
+     +'<td class="num">'+(cost?'¥'+fmt(cost):'—')+'</td>'
+     +'<td class="num">'+sh+'</td><td class="num">'+so+'</td><td class="num">'+(sh-so)+'</td>'
+     +'<td><span class="rowact" style="opacity:1">'
+     +'<button class="btn ghost sm" data-act="precipe" data-id="'+p.id+'">'+ic('edit',13)+'用料</button>'
+     +'<button class="ibtn" data-act="pedit" data-id="'+p.id+'" title="编辑">'+ic('edit',15)+'</button>'
+     +'<button class="ibtn" data-act="pdel" data-id="'+p.id+'" title="删除" '+(inUse?'disabled style="opacity:.3"':'')+'>'+ic('del',15)+'</button>'
+     +'</span></td></tr>';
+  });
+  return h+'</tbody></table>';
+}
+function diyPage(p){
+  var x='<div class="backrow" style="margin-top:8px"><button class="btn ghost sm" data-act="rccancel">'+ic('left',14)+'返回货品清单</button><span class="pname" style="font-size:16px">DIY 拼图 · '+esc(p.name)+'（'+esc(p.cat)+'）</span><span style="flex:1"></span><button class="ibtn" data-act="rccancel">'+ic('del',15)+'</span></div>'
+   +'<div class="note">把下面配件盘里的元素<b>拖进画布</b>拼图：拖动调整位置，点选元素后再点「删除选中」。拖入一段链计 0.5cm；所有元素自动吸附到网格对齐，随手摆也整齐。</div>'
+   +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">'
+   +S.comps.map(function(c){
+     return '<span class="palchip" data-cid="'+c.id+'">'
+      +(c.img?'<img src="'+c.img+'" style="width:18px;height:18px;border-radius:50%;object-fit:cover">':'<span style="width:12px;height:12px;border-radius:50%;background:'+compColor(c)+'"></span>')
+      +esc(c.name)+' ¥'+c.cost+'/'+esc(c.unit)+'</span>';
+   }).join('')
+   +'</div>'
+   +'<svg id="diy-svg" viewBox="0 0 620 320">'
+   +DRAFT.map(function(it,i){
+     var c=compOf(it.cid);if(!c)return'';
+     return '<g data-idx="'+i+'" transform="translate('+it.x+','+it.y+')" style="cursor:grab">'
+      +(SEL_INST===i?'<circle r="17" fill="none" stroke="#4C6FE7" stroke-width="1.5" stroke-dasharray="3,2"/>':'')
+      +node0(c,compColor(c))+'</g>';
+   }).join('')
+   +'</svg>'
+   +'<div class="fgrid" style="margin-top:10px">'
+   +'<div class="fld"><label>基础元素制作时间（分钟）</label><input id="rc-base" type="number" min="0" step="0.5" value="'+((p.time&&p.time.base)||0)+'"></div>'
+   +'<div class="fld"><label>组装时间（分钟）</label><input id="rc-asm" type="number" min="0" step="0.5" value="'+((p.time&&p.time.asm)||0)+'"></div>'
+   +'</div>'
+   +'<div style="margin:10px 0 4px;font-size:13px;line-height:22px">'
+   +'用料成本 <b class="num" id="rc-cost">¥'+fmt(diyCost(DRAFT))+'</b> · 人力成本 <b class="num" id="rc-labor">¥'+fmt(laborCost(p))+'</b>（按 ¥'+fmt(S.settings.wagePerHour||30)+'/小时）· 单件总成本 <b class="num" id="rc-total">¥'+fmt(diyCost(DRAFT)+laborCost(p))+'</b> · <span id="rc-margin" class="muted">'+(p.price?('毛利率 '+Math.round((1-(diyCost(DRAFT)+laborCost(p))/p.price)*100)+'%（售价 ¥'+fmt(p.price)+'）'):'—')+'</span></div>'
+   +'<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">'
+   +'<button class="btn ghost sm" data-act="rcdel" '+((SEL_INST==null)?'disabled':'')+'>'+ic('del',13)+'删除选中</button>'
+   +'<button class="btn ghost sm" data-act="rcclear" '+(!DRAFT.length?'disabled':'')+'>清空画布</button>'
+   +'<button class="btn sm" data-act="rcsave" data-id="'+p.id+'">'+ic('plus',13)+'保存并返回</button>'
+   +'<button class="btn ghost sm" data-act="rccancel">取消并返回</button>'
+   +'</div>';
+  return x;
+}
+function vComps(){
+  var h='<div class="note">配件库是全品类共享的「基础元素」清单：开口环、龙虾扣、延长链、珠子等。设好单价和形状后，在货品清单点「用料」拖拽拼图，系统自动算成本。</div>';
+  h+='<form class="form" data-form="comp"><h3>新增配件</h3><div class="fgrid">'
+   +'<div class="fld"><label>名称 *</label><input id="c-name" required placeholder="如 开口环 / 14K包金链"></div>'
+   +'<div class="fld"><label>单位</label><select id="c-unit"><option>个</option><option>对</option><option>cm</option></select></div>'
+   +'<div class="fld"><label>单价（元）*</label><input id="c-cost" type="number" min="0" step="0.01" required placeholder="0.00"></div>'
+   +'<div class="fld"><label>示意图形状</label><select id="c-shape">'
+   +Object.keys(SHAPES).map(function(k){return '<option value="'+k+'">'+SHAPES[k]+'</option>'}).join('')
+   +'</select></div>'
+   +'<div class="fld" style="grid-column:1/-1"><label>自定义图片（可选，拼图时用图替代形状）</label><div class="imgup"><span class="imgprev" id="c-imgprev" style="width:48px;height:48px">'+ic('img',18)+'</span>'
+   +'<label class="btn ghost sm">'+ic('ul',14)+'上传<input type="file" id="c-img" accept="image/*" hidden></label></div></div>'
+   +'</div><div style="margin-top:12px"><button class="btn" type="submit">'+ic('plus',14)+'添加配件</button></div></form>';
+  h+='<h2 class="sec">配件库（共 '+S.comps.length+' 种）</h2>';
+  h+='<table class="tb"><thead><tr><th></th><th>名称</th><th>单位</th><th class="num">单价</th><th>形状</th><th class="num">被引用</th><th></th></tr></thead><tbody>';
+  S.comps.forEach(function(c){
+    var used=compUsed(c.id);
+    h+='<tr><td>'+(c.img?'<img class="thumb" style="width:28px;height:28px" src="'+c.img+'">':'<span class="thumb" style="width:28px;height:28px;background:var(--kimi-color-surface-muted)">'+esc(c.name.slice(0,1))+'</span>')+'</td>'
+     +'<td class="pname">'+esc(c.name)+'</td><td>'+esc(c.unit)+'</td><td class="num">¥'+fmt(c.cost)+'</td><td class="muted">'+SHAPES[c.shape]+'</td><td class="num">'+used+' 次</td>'
+     +'<td><span class="rowact">'
+     +'<button class="ibtn" data-act="cedit" data-id="'+c.id+'" title="编辑">'+ic('edit',15)+'</button>'
+     +'<button class="ibtn" data-act="cdel" data-id="'+c.id+'" title="删除" '+(used?'disabled style="opacity:.3"':'')+'>'+ic('del',15)+'</button>'
+     +'</span></td></tr>';
+  });
+  return h+'</tbody></table>';
+}
+function vFinance(){
+  var prods=lineProds(LIN),lname=curLine().name,cm=today().slice(0,7);
+  var wage=S.settings.wagePerHour||30;
+  var rows=prods.map(function(p){
+    var mat=diyCost(p.diy);
+    var lab=laborCost(p);
+    var cost=Math.round((mat+lab)*100)/100;
+    var price=+p.price||0;
+    var margin=Math.round((price-cost)*100)/100;
+    var so=soldAll(p.id);
+    var soM=0;lineStores(LIN).forEach(function(st){soM+=soldMonth(st.id,p.id,cm)});
+    var sh=0;lineStores(LIN).forEach(function(st){sh+=shipped(st.id,p.id)});
+    var left=sh-so;
+    return{p:p,mat:mat,lab:lab,cost:cost,price:price,margin:margin,mr:price?margin/price:0,so:so,soM:soM,left:left,gross:Math.round(margin*so*100)/100,grossM:Math.round(margin*soM*100)/100,occ:Math.round(cost*left*100)/100};
+  });
+  var tSold=0,tGross=0,tGrossM=0,tOcc=0,tRev=0;
+  rows.forEach(function(r){tSold+=r.so;tGross+=r.gross;tGrossM+=r.grossM;tOcc+=r.occ;tRev+=r.price*r.so});
+  rows.sort(function(a,b){return b.gross-a.gross});
+  var h='<div class="note">财务统计 · '+esc(lname)+'。单件总成本 = 用料成本 + 人力成本（制作时间 × ¥'+fmt(wage)+'/小时，含基础元素与组装两段）。毛利按售价减总成本计算，售出口径为所有店铺累计。</div>';
+  h+='<div class="kpis">'
+   +kpi(tSold,'累计售出（件）')
+   +kpi('¥'+fmt(tGross),'累计毛利额')
+   +kpi('¥'+fmt(tGrossM),'本月毛利额')
+   +kpi('¥'+fmt(tOcc),'库存占用成本')
+   +kpi(tRev?Math.round(tGross/tRev*100)+'%':'—','整体毛利率')
+   +'</div>';
+  h+='<div class="tscroll"><table class="tb"><thead><tr><th></th><th>货号 / 名称</th><th class="num">售价</th><th class="num">用料</th><th class="num">人力</th><th class="num">总成本</th><th class="num">单件毛利</th><th class="num">毛利率</th><th class="num">累计售出</th><th class="num">累计毛利</th><th class="num">本月毛利</th><th class="num">在店</th><th class="num">库存占用</th></tr></thead><tbody>';
+  if(!rows.length)h+='<tr><td colspan="13" class="muted">该品类还没有货品</td></tr>';
+  rows.forEach(function(r){
+    var p=r.p;
+    h+='<tr><td>'+thumb(p,28)+'</td><td><div class="pname">'+esc(p.name)+'</div><div class="pcode">'+esc(p.code)+' · '+(((p.time||{}).base)||0)+'+'+(((p.time||{}).asm)||0)+' 分钟</div></td>'
+     +'<td class="num">'+(r.price?'¥'+fmt(r.price):'—')+'</td>'
+     +'<td class="num">'+(r.mat?'¥'+fmt(r.mat):'—')+'</td>'
+     +'<td class="num">'+(r.lab?'¥'+fmt(r.lab):'—')+'</td>'
+     +'<td class="num" style="font-weight:500">'+(r.cost?'¥'+fmt(r.cost):'—')+'</td>'
+     +'<td class="num" style="color:'+(r.margin>=0?'var(--kimi-color-positive)':'var(--kimi-color-danger)')+'">'+(r.price?'¥'+fmt(r.margin):'—')+'</td>'
+     +'<td class="num">'+(r.price?Math.round(r.mr*100)+'%':'—')+'</td>'
+     +'<td class="num">'+r.so+'</td>'
+     +'<td class="num" style="font-weight:500">'+(r.gross?'¥'+fmt(r.gross):'—')+'</td>'
+     +'<td class="num">'+(r.grossM?'¥'+fmt(r.grossM):'—')+'</td>'
+     +'<td class="num">'+r.left+'</td>'
+     +'<td class="num">'+(r.occ?'¥'+fmt(r.occ):'—')+'</td></tr>';
+  });
+  h+='<tr style="font-weight:500;background:var(--kimi-color-surface-muted)"><td></td><td>合计</td><td></td><td></td><td></td><td></td><td></td><td></td>'
+   +'<td class="num">'+tSold+'</td><td class="num">¥'+fmt(tGross)+'</td><td class="num">¥'+fmt(tGrossM)+'</td><td></td><td class="num">¥'+fmt(tOcc)+'</td></tr>';
+  return h+'</tbody></table></div>'
+   +'<div class="muted" style="margin-top:6px">想调整人力成本单价？到「数据与设置 → 提醒与成本设置」修改工时单价（当前 ¥'+fmt(wage)+'/小时）。制作时间在货品清单「用料」里填写。</div>';
+}
+function vProdSales(){
+  var lst=lineStores(LIN),prods=lineProds(LIN);
+  var h='<div class="monthnav">'
+   +'<button class="ibtn" data-act="mprev" style="width:32px;height:32px">'+ic('left',16)+'</button>'
+   +'<span class="mlab">'+monthLabel(CUR)+'</span>'
+   +'<button class="ibtn" data-act="mnext" style="width:32px;height:32px">'+ic('right',16)+'</button>'
+   +'<button class="btn ghost sm" data-act="mnow">回到本月</button>'
+   +'<input type="month" id="m-input" value="'+CUR+'" style="margin-left:auto;padding:6px 10px;border:1px solid var(--kimi-color-border);border-radius:10px;background:var(--kimi-color-surface);font-size:14px">'
+   +'</div>';
+  if(!prods.length)return h+'<div class="empty">该品类还没有货品，请先在「货品清单」录入</div>';
+  var rows=prods.map(function(p){
+    var mAll=0,byStore={},sh=0,so=0;
+    lst.forEach(function(st){
+      var a=soldMonth(st.id,p.id,CUR);mAll+=a;byStore[st.id]=a;
+      sh+=shipped(st.id,p.id);so+=sold(st.id,p.id);
+    });
+    return{p:p,mAll:mAll,byStore:byStore,shipped:sh,sold:so,left:sh-so};
+  });
+  rows.sort(function(a,b){return b.mAll-a.mAll||b.sold-a.sold});
+  var tot=0;rows.forEach(function(r){tot+=r.mAll});
+  h+='<div class="kpis">'+kpi(tot,monthLabel(CUR)+' 总售出（件）')+kpi(rows.filter(function(r){return r.mAll>0}).length,'本月有动销款式')+kpi(rows.filter(function(r){return r.shipped>0&&r.sold===0}).length,'累计零动销')+'</div>';
+  h+='<table class="tb"><thead><tr><th>#</th><th></th><th>货号 / 名称</th><th>本月合计</th>';
+  lst.forEach(function(st){h+='<th class="num">'+stNo(st.id)+' '+esc(st.name.replace(/（示例）/g,''))+(isStopped(st)?'（停）':'')+'</th>'});
+  h+='<th class="num">累计出货</th><th class="num">累计售出</th><th class="num">在店</th></tr></thead><tbody>';
+  rows.forEach(function(r,i){
+    var p=r.p;
+    h+='<tr><td>'+(i<3&&r.mAll>0?chip('#'+(i+1),'c-blue'):'<span class="rank">'+(i+1)+'</span>')+'</td><td>'+thumb(p)+'</td>'
+     +'<td><div class="pname">'+esc(p.name)+'</div><div class="pcode">'+esc(p.code)+' · '+esc(p.cat)+'</div></td>'
+     +'<td class="num" style="font-weight:500">'+(r.mAll||'—')+'</td>';
+    lst.forEach(function(st){var v=r.byStore[st.id];h+='<td class="num">'+(v||'—')+'</td>'});
+    h+='<td class="num">'+r.shipped+'</td><td class="num">'+r.sold+'</td><td class="num">'+r.left+'</td></tr>';
+  });
+  return h+'</tbody></table>';
+}
+
+function vData(){
+  var h='<div class="form"><h3>品类管理（每个品类有独立的货品、店铺与账目）</h3>'
+   +'<table class="tb"><thead><tr><th>品类</th><th class="num">店铺数</th><th class="num">货品数</th><th></th></tr></thead><tbody>';
+  S.lines.forEach(function(l){
+    var sn=S.stores.filter(function(st){return (st.line||'l1')===l.id}).length;
+    var pn=S.products.filter(function(p){return (p.line||'l1')===l.id}).length;
+    h+='<tr><td class="pname">'+esc(l.name)+(l.id===LIN?' '+chip('当前','c-blue'):'')+'</td><td class="num">'+sn+'</td><td class="num">'+pn+'</td>'
+     +'<td><span class="rowact">'
+     +'<button class="ibtn" data-act="lnren" data-id="'+l.id+'" title="改名">'+ic('edit',14)+'</button>'
+     +'<button class="ibtn" data-act="lndel" data-id="'+l.id+'" title="删除（无店铺且无货品时可用）">'+ic('del',14)+'</button>'
+     +'</span></td></tr>';
+  });
+  h+='</tbody></table>'
+   +'<form data-form="line" style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center">'
+   +'<input id="ln-name" required placeholder="新品类名称，如 袜子 / 香水" style="flex:1;min-width:180px;padding:8px 10px;border:1px solid var(--kimi-color-border);border-radius:10px;background:var(--kimi-color-surface);font-size:14px">'
+   +'<button class="btn" type="submit">'+ic('plus',14)+'新增品类</button></form></div>';
+
+  h+='<div class="form"><h3>全部店铺（按品类）</h3>'
+   +'<table class="tb"><thead><tr><th>品类</th><th>#</th><th>店铺</th><th>城市</th><th>联系方式</th><th>邮寄信息</th><th class="num">结算比例</th><th>状态</th><th></th></tr></thead><tbody>';
+  if(!S.stores.length)h+='<tr><td colspan="9" class="muted">暂无店铺</td></tr>';
+  S.lines.forEach(function(l){
+    var lst=lineStores(l.id);
+    lst.forEach(function(st,i){
+      h+='<tr><td>'+esc(l.name)+'</td><td><span class="rank">'+(i+1)+'</span></td><td class="pname">'+esc(st.name)+'</td><td>'+(st.city?esc(st.city):'—')+'</td><td class="muted">'+esc(st.contact||'—')+'</td><td class="muted">'+esc(st.mail||'—')+'</td><td class="num">'+Math.round(st.ratio*100)+'%</td>'
+       +'<td>'+(isStopped(st)?chip('已停止','c-gray'):chip('合作中','c-pos'))+'</td>'
+       +'<td><span class="rowact">'
+       +'<button class="ibtn" data-act="stedit" data-id="'+st.id+'" title="编辑">'+ic('edit',15)+'</button>'
+       +(isStopped(st)
+         ?'<button class="ibtn" data-act="stresume" data-id="'+st.id+'" title="恢复合作" style="color:var(--kimi-color-positive)">'+ic('plus',14)+'</button>'
+         :'<button class="ibtn" data-act="ststop" data-id="'+st.id+'" title="停止合作" style="color:var(--kimi-color-warning)">'+ic('minus',14)+'</button>')
+       +'<button class="ibtn" data-act="stdel" data-id="'+st.id+'" title="删除">'+ic('del',15)+'</button></span></td></tr>';
+    });
+  });
+  h+='</tbody></table></div>';
+  h+='<div class="form"><h3>提醒与成本设置</h3><div class="fgrid">'
+   +'<div class="fld"><label>低库存阈值（剩余 ≤ N 件提醒补货）</label><input id="set-low" type="number" min="0" value="'+S.settings.lowStock+'"></div>'
+   +'<div class="fld"><label>回款提醒（超过 N 天未回款提醒）</label><input id="set-days" type="number" min="1" value="'+S.settings.alertDays+'"></div>'
+   +'<div class="fld"><label>工时单价（元/小时，用于人力成本）</label><input id="set-wage" type="number" min="0" step="0.5" value="'+(S.settings.wagePerHour||30)+'"></div>'
+   +'</div><div style="margin-top:12px"><button class="btn" data-act="saveset">保存设置</button></div></div>';
+  h+='<div class="form"><h3>数据管理</h3>'
+   +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+   +'<button class="btn ghost sm" data-act="expjson">'+ic('dl',14)+'导出备份（JSON）</button>'
+   +'<label class="btn ghost sm">'+ic('ul',14)+'导入备份<input type="file" id="impfile" accept=".json,application/json" hidden></label>'
+   +'<button class="btn ghost sm" data-act="expcsv">'+ic('dl',14)+'导出当前品类对账表（CSV）</button>'
+   +'<button class="btn sm" data-act="wipe" style="border-color:var(--kimi-color-danger);color:var(--kimi-color-danger);background:transparent">'+ic('del',14)+'清空全部数据</button>'
+   +'</div><p class="muted" style="margin:8px 0 0">数据仅保存在本机浏览器（localStorage）。建议每月导出 JSON 备份；换电脑时用导入恢复。CSV 只导出当前选中的品类。</p></div>';
+  return h;
+}
+
+function download(name,content,mime){
+  var b=content instanceof Blob?content:new Blob([content],{type:mime||'application/octet-stream'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;
+  document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},100);
+}
+function expCSV(){
+  var lst=lineStores(LIN),lname=curLine().name;
+  var lines=[['品类','店铺编号','店铺','城市','状态','货号','货品名称','类别','出货','售出','剩余','售价','结算比例','未回款金额','上次回款','距今天数'].join(',')];
+  lst.forEach(function(st){
+    var d=lastPayDate(st.id),gap=d?daysBetween(d,today()):'';
+    storeRows(st.id).forEach(function(r){
+      var p=prod(r.pid);
+      lines.push([lname,stNo(st.id),st.name,st.city,isStopped(st)?'已停止合作':'合作中',p?p.code:'',p?p.name:'',p?p.cat:'',r.shipped,r.sold,r.left,p?p.price:'',Math.round(st.ratio*100)+'%',owing(st.id),d||'',gap].map(function(x){x=String(x==null?'':x);return /[",\n]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x}).join(','));
+    });
+  });
+  lines.push('');
+  lines.push(['品类','店铺编号','店铺','账期月份','回款金额','状态','回款日期','备注'].join(','));
+  S.payments.filter(function(r){var st=store(r.storeId);return st&&(st.line||'l1')===LIN})
+   .slice().sort(function(a,b){return b.month.localeCompare(a.month)}).forEach(function(r){
+    var st=store(r.storeId),sc=ST[r.status]||ST.unpaid;
+    lines.push([lname,stNo(r.storeId),st?st.name:'',r.month,r.amount,sc[0],r.date,r.note||''].map(function(x){x=String(x==null?'':x);return /[",\n]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x}).join(','));
+  });
+  download('寄售对账_'+lname+'_'+today()+'.csv','\ufeff'+lines.join('\n'),'text/csv');
+}
+
+function orderItems(){
+  if(!ORDER)return[];
+  var st=store(ORDER.storeId);
+  return ORDER.items.map(function(it){
+    var p=prod(it.pid);
+    return{p:p,qty:it.qty,sp:p?settlePrice(p,st):0};
+  });
+}
+function orderXLS(){
+  var st=store(ORDER.storeId);
+  var h='<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"></head><body>'
+   +'<table border="1" style="border-collapse:collapse">'
+   +'<tr><td colspan="5" style="font-size:16px;font-weight:bold">补货订货单 — '+esc(st?st.name:'')+'（'+esc(ORDER.date)+'）</td></tr>'
+   +'<tr><td>图片</td><td>货号</td><td>名称</td><td>售价</td><td>结算价</td><td>数量</td></tr>';
+  orderItems().forEach(function(it){
+    h+='<tr><td>'+(it.p&&it.p.img?'<img src="'+it.p.img+'" width="44" height="44">':'')+'</td><td>'+(it.p?esc(it.p.code):'')+'</td><td>'+(it.p?esc(it.p.name):'')+'</td><td>'+(it.p?it.p.price:'')+'</td><td>'+it.sp+'</td><td>'+it.qty+'</td></tr>';
+  });
+  h+='<tr><td colspan="5" style="text-align:right;font-weight:bold">合计 '+ORDER.totQty+' 件 · 结算金额</td><td style="font-weight:bold">¥'+fmt(ORDER.totAmt)+'</td></tr></table></body></html>';
+  download('订货单_'+(st?st.name:'')+'_'+ORDER.date+'.xls',h,'application/vnd.ms-excel');
+}
+function orderPNG(){
+  var st=store(ORDER.storeId);
+  var items=orderItems();
+  var W=820,pad=24,rowH=76,headH=96,footH=64;
+  var H=pad*2+headH+items.length*rowH+footH;
+  var cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  var c=cv.getContext('2d');
+  c.fillStyle='#ffffff';c.fillRect(0,0,W,H);
+  c.fillStyle='#161616';c.font='500 24px sans-serif';
+  c.fillText('补货订货单',pad,pad+28);
+  c.font='13px sans-serif';c.fillStyle='#666666';
+  c.fillText('店铺：'+(st?st.name:'')+'（结算比例 '+Math.round(st?st.ratio*100:0)+'%）    日期：'+ORDER.date+'    共 '+items.length+' 款 / '+ORDER.totQty+' 件',pad,pad+54);
+  var y=pad+headH;
+  c.strokeStyle='#dddddd';c.lineWidth=1;
+  c.beginPath();c.moveTo(pad,y-24);c.lineTo(W-pad,y-24);c.stroke();
+  c.font='12px sans-serif';c.fillStyle='#999999';
+  var cols=[pad+4,pad+76,pad+330,pad+460,pad+580];
+  ['图片','货品','售价','结算价','数量'].forEach(function(t,i){c.fillText(t,cols[i],y-8)});
+  var i=0;
+  function rr(x,y2,w,h,r){c.beginPath();if(c.roundRect)c.roundRect(x,y2,w,h,r);else c.rect(x,y2,w,h)}
+  function drawRow(){
+    if(i>=items.length){
+      c.strokeStyle='#dddddd';c.beginPath();c.moveTo(pad,y);c.lineTo(W-pad,y);c.stroke();
+      c.font='500 15px sans-serif';c.fillStyle='#161616';
+      c.fillText('合计：'+ORDER.totQty+' 件    结算金额：¥'+fmt(ORDER.totAmt),pad,y+34);
+      download('订货单_'+(st?st.name:'')+'_'+ORDER.date+'.png',dataURLtoBlob(cv.toDataURL('image/png')),'image/png');
+      return;
+    }
+    var it=items[i],ry=y+i*rowH;
+    c.strokeStyle='#eeeeee';c.beginPath();c.moveTo(pad,ry+rowH-6);c.lineTo(W-pad,ry+rowH-6);c.stroke();
+    c.font='14px sans-serif';c.fillStyle='#161616';
+    c.fillText((it.p?it.p.name:'').slice(0,14),cols[1],ry+34);
+    c.font='12px sans-serif';c.fillStyle='#999999';
+    c.fillText(it.p?it.p.code:'',cols[1],ry+54);
+    c.font='13px sans-serif';c.fillStyle='#333333';
+    c.fillText(it.p?'¥'+fmt(it.p.price):'—',cols[2],ry+42);
+    c.fillText('¥'+fmt(it.sp),cols[3],ry+42);
+    c.font='500 13px sans-serif';c.fillStyle='#161616';
+    c.fillText('× '+it.qty,cols[4],ry+42);
+    if(it.p&&it.p.img){
+      var img=new Image();
+      img.onload=function(){c.save();rr(cols[0],ry+10,52,52,8);c.clip();c.drawImage(img,cols[0],ry+10,52,52);c.restore();i++;drawRow()};
+      img.onerror=function(){i++;drawRow()};
+      img.src=it.p.img;
+    }else{
+      c.fillStyle='#f0f0f0';rr(cols[0],ry+10,52,52,8);c.fill();
+      c.fillStyle='#999999';c.font='500 16px sans-serif';
+      var ch=it.p?(it.p.cat==='项链'?'项':it.p.cat==='耳饰'?'耳':it.p.cat==='手链'?'手':it.p.cat==='戒指'?'戒':'饰'):'?';
+      c.fillText(ch,cols[0]+20,ry+42);
+      i++;drawRow();
+    }
+  }
+  drawRow();
+}
+function dataURLtoBlob(d){
+  var arr=d.split(','),mime=arr[0].match(/:(.*?);/)[1],bstr=atob(arr[1]),n=bstr.length,u=new Uint8Array(n);
+  while(n--)u[n]=bstr.charCodeAt(n);
+  return new Blob([u],{type:mime});
+}
+
+app.addEventListener('click',function(e){
+  var gt=e.target&&e.target.closest?e.target.closest('input[name="gtab"]'):null;
+  if(gt){PTAB=gt.value;RECIPE=null;render();return}
+  var st2=e.target&&e.target.closest?e.target.closest('input[name="stab"]'):null;
+  if(st2){STAB=st2.value;render();return}
+  var t=e.target&&e.target.closest?e.target.closest('[data-tab],[data-act]'):null;if(!t)return;
+  if(t.dataset.tab){go(t.dataset.tab);return}
+  var act=t.dataset.act,id=t.dataset.id;
+  if(act==='sopen'){SEL=id;TAB='stores';ORDER=null;render();window.scrollTo(0,0)}
+  else if(act==='sback'){SEL=null;render()}
+  else if(act==='mprev'){CUR=shiftMonth(CUR,-1);render()}
+  else if(act==='mnext'){CUR=shiftMonth(CUR,1);render()}
+  else if(act==='mnow'){CUR=today().slice(0,7);render()}
+  else if(act==='mapsel'){MAPCITY=t.dataset.city;render()}
+  else if(act==='ovpay'){OVEXPAND=!OVEXPAND;render()}
+  else if(act==='ststop'){var st=store(id);if(st&&confirm('停止与「'+st.name+'」的合作？\n历史记录将完整保留，该店不再出现在提醒中，也不能再登记新账。')){st.status='stopped';save();render()}}
+  else if(act==='stresume'){var st=store(id);if(st&&confirm('恢复与「'+st.name+'」的合作？')){st.status='active';save();render()}}
+  else if(act==='photodel'&&confirm('删除这张照片？')){S.photos=S.photos.filter(function(r){return r.id!==id});save();render()}
+  else if(act==='precipe'){
+    try{
+      var pp=prod(id);if(!pp)return;
+      RECIPE=id;DRAFT=(pp.diy||[]).map(function(it){return{cid:it.cid,x:snapX(it.x),y:snapY(it.y)}});SEL_INST=null;
+      render();
+    }catch(err){alert('打开用料编辑器失败：'+err.message)}
+  }
+  else if(act==='rcdel'){if(SEL_INST!=null){DRAFT.splice(SEL_INST,1);SEL_INST=null}render()}
+  else if(act==='rcclear'){DRAFT=[];SEL_INST=null;render()}
+  else if(act==='rcsave'){
+    try{
+      var pp2=prod(id);if(pp2){
+        pp2.diy=DRAFT.map(function(it){return{cid:it.cid,x:it.x,y:it.y}});
+        var b=parseFloat((document.getElementById('rc-base')||{}).value)||0;
+        var a=parseFloat((document.getElementById('rc-asm')||{}).value)||0;
+        pp2.time={base:b,asm:a};
+        save();
+      }
+      RECIPE=null;DRAFT=[];SEL_INST=null;render();
+    }catch(err){alert('保存失败：'+err.message)}
+  }
+  else if(act==='rccancel'){RECIPE=null;DRAFT=[];SEL_INST=null;render()}
+  else if(act==='cedit'){
+    var c=compOf(id);if(!c)return;
+    var nm=prompt('配件名称：',c.name);if(nm===null)return;
+    var co=prompt('单价（元）：',c.cost);if(co===null)return;
+    var un=prompt('单位（个/对/cm）：',c.unit);if(un===null)return;
+    if(nm.trim())c.name=nm.trim();
+    var cv=parseFloat(co);if(!isNaN(cv))c.cost=cv;
+    if(un.trim())c.unit=un.trim();
+    save();render();
+  }
+  else if(act==='cdel'&&confirm('删除这个配件？')){
+    if(compUsed(id)){alert('该配件已被货品引用，无法删除');return}
+    S.comps=S.comps.filter(function(c){return c.id!==id});save();render();
+  }
+  else if(act==='sqty'){
+    var f=t.dataset.f,pid=t.dataset.pid,d=+t.dataset.d;
+    var obj=f==='ship'?qo(QSHIP,SEL):qo(QSALE,SEL);
+    obj[pid]=(obj[pid]||0)+d;
+    if(obj[pid]<0)obj[pid]=0;
+    if(f==='sale'){var left=shipped(SEL,pid)-sold(SEL,pid);if(obj[pid]>left)obj[pid]=left}
+    render();
+  }
+  else if(act==='shipgo'){
+    var qs2=qo(QSHIP,SEL),st3=store(SEL);
+    var items=[],totQty=0,totAmt=0;
+    Object.keys(qs2).forEach(function(pid){
+      var q=qs2[pid];if(!q)return;var p=prod(pid);if(!p)return;
+      var sp=settlePrice(p,st3);items.push({pid:pid,qty:q,sub:sp*q});totQty+=q;totAmt+=sp*q;
+    });
+    if(!items.length){alert('请先给至少一款货选择数量');return}
+    var dt=(document.getElementById('sh-date')||{}).value||today();
+    items.forEach(function(it){S.shipments.push({id:uid(),storeId:SEL,productId:it.pid,qty:it.qty,date:dt,note:''})});
+    ORDER={storeId:SEL,date:dt,items:items,totQty:totQty,totAmt:totAmt};
+    PHOTO_WARN={storeId:SEL,date:dt};
+    QSHIP[SEL]={};EXTRA[SEL]={};
+    save();render();window.scrollTo(0,0);
+  }
+  else if(act==='salego'){
+    var qa2=qo(QSALE,SEL),made=0;
+    var dt2=(document.getElementById('sa-date')||{}).value||today();
+    Object.keys(qa2).forEach(function(pid){
+      var q=qa2[pid];if(!q)return;
+      S.sales.push({id:uid(),storeId:SEL,productId:pid,qty:q,date:dt2,note:''});made++;
+    });
+    if(!made){alert('请先给至少一款货选择数量');return}
+    QSALE[SEL]={};
+    save();render();
+  }
+  else if(act==='orderpng'){orderPNG()}
+  else if(act==='orderxls'){orderXLS()}
+  else if(act==='orderclose'){ORDER=null;render()}
+  else if(act==='lnren'){var ln=lineOf(id);if(!ln)return;var nn=prompt('品类名称：',ln.name);if(nn===null)return;if(!nn.trim())return;ln.name=nn.trim();save();render()}
+  else if(act==='lndel'){
+    var ln2=lineOf(id);if(!ln2)return;
+    if(S.lines.length<=1){alert('至少保留一个品类');return}
+    if(lineStores(id).length||lineProds(id).length){alert('该品类下还有店铺或货品，无法删除。请先清空或改用其他品类。');return}
+    if(confirm('删除品类「'+ln2.name+'」？')){S.lines=S.lines.filter(function(l){return l.id!==id});if(LIN===id)LIN=S.lines[0].id;save();render()}
+  }
+  else if(act==='hdel'&&confirm('删除这条出货记录？')){S.shipments=S.shipments.filter(function(r){return r.id!==id});save();render()}
+  else if(act==='sadel'&&confirm('删除这条售出记录？')){S.sales=S.sales.filter(function(r){return r.id!==id});save();render()}
+  else if(act==='paydel'&&confirm('删除这条回款记录？')){S.payments=S.payments.filter(function(r){return r.id!==id});save();render()}
+  else if(act==='payok'){var pay=null;S.payments.forEach(function(r){if(r.id===id)pay=r});if(pay&&confirm('把这笔回款标记为「已回款」？')){pay.status='paid';save();render()}}
+  else if(act==='pdel'&&confirm('删除这个货品？有出货记录的货品不可删除。')){S.products=S.products.filter(function(p){return p.id!==id});save();render()}
+  else if(act==='pedit'){
+    var p=prod(id);if(!p)return;
+    var cd=prompt('货号：',p.code);if(cd===null)return;
+    var nm=prompt('货品名称：',p.name);if(nm===null)return;
+    var pr=prompt('售价（元）：',p.price||'');if(pr===null)return;
+    if(cd.trim())p.code=cd.trim();p.name=nm.trim()||p.name;p.price=parseFloat(pr)||0;save();render();
+  }
+  else if(act==='stdel'&&confirm('删除这个店铺？其出货、售出与回款记录也会一并删除。建议优先使用「停止合作」保留历史。')){
+    S.stores=S.stores.filter(function(s){return s.id!==id});
+    S.shipments=S.shipments.filter(function(r){return r.storeId!==id});
+    S.sales=S.sales.filter(function(r){return r.storeId!==id});
+    S.payments=S.payments.filter(function(r){return r.storeId!==id});
+    S.photos=S.photos.filter(function(r){return r.storeId!==id});
+    if(SEL===id)SEL=null;
+    save();render();
+  }
+  else if(act==='stedit'){
+    var st=store(id);if(!st)return;
+    var ct=prompt('所在城市：',st.city||'');if(ct===null)return;
+    var c2=prompt('联系方式：',st.contact||'');if(c2===null)return;
+    var ml=prompt('邮寄信息：',st.mail||'');if(ml===null)return;
+    var ra=prompt('结算比例（%）：',Math.round(st.ratio*100));if(ra===null)return;
+    var it2=prompt('一句话介绍：',st.intro||'');if(it2===null)return;
+    st.city=ct.trim();st.contact=c2.trim();st.mail=ml.trim();st.intro=it2.trim();
+    var rv=parseFloat(ra);if(!isNaN(rv))st.ratio=Math.min(100,Math.max(0,rv))/100;
+    save();render();
+  }
+  else if(act==='saveset'){
+    S.settings.lowStock=Math.max(0,parseInt(document.getElementById('set-low').value)||0);
+    S.settings.alertDays=Math.max(1,parseInt(document.getElementById('set-days').value)||30);
+    var wg=parseFloat(document.getElementById('set-wage').value);
+    if(!isNaN(wg))S.settings.wagePerHour=Math.max(0,wg);
+    save();render();
+  }
+  else if(act==='expjson'){download('寄售台账备份_'+today()+'.json',JSON.stringify(S,null,1),'application/json')}
+  else if(act==='expcsv'){expCSV()}
+  else if(act==='wipe'&&confirm('确定清空全部数据（所有品类）？此操作不可恢复，建议先导出备份。')){
+    S={lines:[{id:'l1',name:'饰品'}],comps:[],photos:[],products:[],stores:[],shipments:[],sales:[],payments:[],settings:{lowStock:2,alertDays:30,wagePerHour:30}};LIN='l1';save();render();
+  }
+});
+app.addEventListener('input',function(e){
+  var el=e.target;
+  if(el.classList&&el.classList.contains('qv')){
+    var f=el.dataset.f,pid=el.dataset.pid;
+    var obj=f==='ship'?qo(QSHIP,SEL):qo(QSALE,SEL);
+    var v=parseInt(el.value);
+    if(isNaN(v)||v<0)v=0;
+    if(f==='sale'){var left=shipped(SEL,pid)-sold(SEL,pid);if(v>left)v=left}
+    obj[pid]=v;
+  }
+});
+app.addEventListener('change',function(e){
+  if(e.target.classList&&e.target.classList.contains('qv'))render();
+});
+app.addEventListener('submit',function(e){
+  var f=e.target;if(!f.dataset.form)return;
+  e.preventDefault();
+  if(f.dataset.form==='product'){
+    var code=document.getElementById('p-code').value.trim(),name=document.getElementById('p-name').value.trim();
+    if(!code||!name)return;
+    if(S.products.some(function(p){return p.code===code})){alert('货号已存在，请换一个');return}
+    S.products.push({id:uid(),code:code,name:name,cat:document.getElementById('p-cat').value,
+      price:parseFloat(document.getElementById('p-price').value)||0,
+      line:LIN,diy:[],time:{base:0,asm:0},
+      img:(document.getElementById('imgprev').dataset.img||'')});
+    save();render();
+  }else if(f.dataset.form==='store'){
+    var nm=document.getElementById('st-name').value.trim();if(!nm)return;
+    var rv=parseFloat(document.getElementById('st-ratio').value);
+    S.stores.push({id:uid(),name:nm,city:document.getElementById('st-city').value.trim(),
+      contact:document.getElementById('st-contact').value.trim(),
+      mail:document.getElementById('st-mail').value.trim(),
+      intro:document.getElementById('st-intro').value.trim(),
+      status:'active',line:LIN,
+      ratio:isNaN(rv)?0.6:Math.min(100,Math.max(0,rv))/100});
+    save();render();
+  }else if(f.dataset.form==='line'){
+    var ln=document.getElementById('ln-name').value.trim();if(!ln)return;
+    if(S.lines.some(function(l){return l.name===ln})){alert('品类已存在');return}
+    var nid=uid();
+    S.lines.push({id:nid,name:ln});
+    LIN=nid;SEL=null;ORDER=null;MAPCITY=null;RECIPE=null;
+    save();render();
+  }else if(f.dataset.form==='comp'){
+    var cn=document.getElementById('c-name').value.trim();if(!cn)return;
+    var cc=parseFloat(document.getElementById('c-cost').value);
+    if(isNaN(cc)){alert('请填写单价');return}
+    S.comps.push({id:uid(),name:cn,unit:document.getElementById('c-unit').value,
+      cost:cc,shape:document.getElementById('c-shape').value,img:COMPIMG});
+    COMPIMG='';
+    save();render();
+  }else if(f.dataset.form==='pay'){
+    var month=document.getElementById('pay-month').value;
+    var amt=parseFloat(document.getElementById('pay-amt').value);
+    if(!month||isNaN(amt)){alert('请填写账期月份和回款金额');return}
+    var exist=paymentOf(SEL,month);
+    if(exist&&!confirm('该店铺 '+monthLabel(month)+' 已有一笔回款记录（¥'+fmt(exist.amount)+'），要再记一笔吗？'))return;
+    var statusEl=f.querySelector('input[name="pay-status"]:checked');
+    S.payments.push({id:uid(),storeId:SEL,month:month,amount:amt,status:statusEl?statusEl.value:'unpaid',
+      date:document.getElementById('pay-date').value||today(),note:document.getElementById('pay-note').value.trim()});
+    save();render();
+  }
+});
+function doImport(){
+  var f=this.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(ev){
+    try{
+      var d=JSON.parse(ev.target.result);
+      if(!d.products||!d.stores||!d.shipments)throw 0;
+      d.sales=d.sales||[];d.payments=d.payments||[];d.photos=d.photos||[];
+      d.settings=d.settings||{lowStock:2,alertDays:30,wagePerHour:30};
+      if(!d.lines||!d.lines.length)d.lines=[{id:'l1',name:'饰品'}];
+      if(!d.comps||!d.comps.length)d.comps=[];
+      d.stores.forEach(function(st){if(st.city==null)st.city='';if(st.intro==null)st.intro='';if(st.ratio==null)st.ratio=0.6;if(st.status==null)st.status='active';if(st.line==null)st.line='l1';if(st.mail==null)st.mail=''});
+      d.products.forEach(function(p){
+        if(p.line==null)p.line='l1';
+        if(p.time==null)p.time={base:0,asm:0};
+        if(p.diy==null){
+          p.diy=[];
+          if(p.recipe&&p.recipe.length){
+            var col=0;
+            p.recipe.forEach(function(it){
+              var n=Math.min(24,Math.max(1,Math.round(+it.qty||1)));
+              for(var k=0;k<n;k++){p.diy.push({cid:it.cid,x:60+(col%9)*56,y:80+Math.floor(col/9)*56});col++}
+            });
+          }
+          delete p.recipe;
+        }
+      });
+      S=d;LIN=S.lines[0].id;save();render();alert('导入成功');
+    }catch(e){alert('文件格式不正确')}
+  };
+  r.readAsText(f);
+}
+render();
+})();
+</script>
+</body>
+</html>
